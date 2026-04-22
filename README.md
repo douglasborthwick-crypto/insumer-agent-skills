@@ -41,10 +41,10 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard, so
 
 ```bash
 # Project-level (per repo)
-npx skills add insumer/insumer-agent-skills
+npx skills add douglasborthwick-crypto/insumer-agent-skills
 
 # Global (every project on your machine)
-npx skills add insumer/insumer-agent-skills --global
+npx skills add douglasborthwick-crypto/insumer-agent-skills --global
 ```
 
 ### Option B: Manual (Claude Code)
