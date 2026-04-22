@@ -53,7 +53,7 @@ When `format: "jwt"` is requested, the response includes a `data.jwt` field with
 | `pass` | boolean | Overall verification result |
 | `results` | array | Per-condition booleans (attest only) |
 | `dimensions` | object | Per-dimension results (trust only) |
-| `conditionHash` | hex string | SHA-256 of canonical condition |
+| `conditionHash` | array of hex strings | SHA-256 of each condition's canonical evaluatedCondition. Top-level JWT payload aggregates one entry per condition (1-element array for single-condition requests). The per-result `conditionHash` inside `results[].conditionHash` is a single string. |
 | `blockNumber` | hex string | Block number on EVM, slot on Solana, ledgerIndex on XRPL |
 | `blockTimestamp` | ISO 8601 | Block timestamp |
 
