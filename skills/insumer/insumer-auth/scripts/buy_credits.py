@@ -7,6 +7,14 @@ Path 4 of 4 (see ../SKILL.md). Preserves key, history, tier, and integrations
 this with the transaction hash. Sender must match the wallet registered to the
 key (or pass --update-wallet to replace it).
 
+Platform wallets:
+  EVM:     0xAd982CB19aCCa2923Df8F687C0614a7700255a23
+  Solana:  6a1mLjefhvSJX1sEX8PTnionbE9DqoYjU6F6bNkT4Ydr
+  Bitcoin: bc1qg7qnerdhlmdn899zemtez5tcx2a2snc0dt9dt0
+
+Volume discounts: $5–$99 → $0.04/call, $100–$499 → $0.03/call (25% off),
+                  $500+ → $0.02/call (50% off).
+
 Usage:
     python buy_credits.py --tx 0xabc... --chain 8453 --amount 10
     python buy_credits.py --tx 0xabc... --chain 8453 --amount 100 --update-wallet
