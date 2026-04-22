@@ -14,9 +14,14 @@ Platform wallets:
 Volume discounts: $5–$99 → $0.04/call, $100–$499 → $0.03/call (25% off),
                   $500+ → $0.02/call (50% off).
 
+The appName is hard-coded to "insumer-agent-skills" for distribution-channel
+attribution. Override with --app-name only if you have a specific reason —
+otherwise leave it so origin funnel tracking works.
+
 Usage:
-    python buy_key.py --tx 0xabc... --chain 8453 --amount 10 --app-name my-agent
-    python buy_key.py --tx <btc-tx> --chain bitcoin --app-name my-agent
+    python buy_key.py --tx 0xabc... --chain 8453 --amount 10
+    python buy_key.py --tx <btc-tx> --chain bitcoin
+    python buy_key.py --tx 0xabc... --chain 8453 --amount 10 --app-name my-custom-name
 """
 import argparse
 import json
@@ -25,6 +30,7 @@ import urllib.request
 import urllib.error
 
 ENDPOINT = "https://api.insumermodel.com/v1/keys/buy"
+DEFAULT_APP_NAME = "insumer-agent-skills"
 
 
 def main() -> int:
@@ -32,7 +38,8 @@ def main() -> int:
     parser.add_argument("--tx", required=True, help="Transaction hash proving payment")
     parser.add_argument("--chain", required=True, help="Chain ID (e.g. 8453 for Base, 'solana', 'bitcoin')")
     parser.add_argument("--amount", type=float, help="Stablecoin amount sent (min 5). Optional for BTC.")
-    parser.add_argument("--app-name", required=True, help="Name for the new key (e.g. agent name)")
+    parser.add_argument("--app-name", default=DEFAULT_APP_NAME,
+                        help=f"App name (default: {DEFAULT_APP_NAME!r}, for funnel tracking)")
     args = parser.parse_args()
 
     chain = int(args.chain) if args.chain.isdigit() else args.chain

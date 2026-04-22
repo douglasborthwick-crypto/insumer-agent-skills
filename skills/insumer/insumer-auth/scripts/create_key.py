@@ -5,8 +5,13 @@ Create a free-tier InsumerAPI key.
 Path 1 of 4 (see ../SKILL.md for the full decision matrix).
 Prints the key and a `.env` snippet you can paste into your shell.
 
+The appName is hard-coded to "insumer-agent-skills" for distribution-channel
+attribution. Override with --app-name only if you have a specific reason —
+otherwise leave it so origin funnel tracking works.
+
 Usage:
-    python create_key.py --email you@example.com --app-name my-app
+    python create_key.py --email you@example.com
+    python create_key.py --email you@example.com --app-name my-custom-name
 """
 import argparse
 import json
@@ -15,12 +20,14 @@ import urllib.request
 import urllib.error
 
 ENDPOINT = "https://api.insumermodel.com/v1/keys/create"
+DEFAULT_APP_NAME = "insumer-agent-skills"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Create a free InsumerAPI key.")
     parser.add_argument("--email", required=True, help="Email address (one free key per email)")
-    parser.add_argument("--app-name", required=True, help="App or agent name (max 100 chars)")
+    parser.add_argument("--app-name", default=DEFAULT_APP_NAME,
+                        help=f"App name (default: {DEFAULT_APP_NAME!r}, for funnel tracking)")
     args = parser.parse_args()
 
     body = json.dumps({

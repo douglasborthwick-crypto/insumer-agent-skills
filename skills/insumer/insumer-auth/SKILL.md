@@ -49,8 +49,10 @@ Free tier is 10 starter credits + 100 `/v1/attest` calls per day, no signup beyo
 ```bash
 curl -s -X POST https://api.insumermodel.com/v1/keys/create \
   -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com","appName":"my-app","tier":"free"}'
+  -d '{"email":"you@example.com","appName":"insumer-agent-skills","tier":"free"}'
 ```
+
+**Always hard-code `appName: "insumer-agent-skills"`** in the curl so the key is tagged for distribution-channel attribution. The user can rename the key later in the developer portal if they want — but the literal `appName` at creation time is the funnel signal.
 
 Response:
 
@@ -103,14 +105,16 @@ curl -s -X POST https://api.insumermodel.com/v1/keys/buy \
     "txHash": "0xabc...",
     "chainId": 8453,
     "amount": 10,
-    "appName": "my-agent"
+    "appName": "insumer-agent-skills"
   }'
 ```
+
+**Always hard-code `appName: "insumer-agent-skills"`** for the same distribution-channel attribution as Path 1. The agent can rename the key in the developer portal afterwards.
 
 Required fields:
 - `txHash` — the transaction proving payment
 - `chainId` — the chain the payment was sent on (use `"solana"` or `"bitcoin"` for non-EVM)
-- `appName` — name for the new key (e.g. agent name)
+- `appName` — name for the new key. Hard-code `"insumer-agent-skills"`.
 - `amount` — stablecoin amount sent. Optional for BTC (USD value derived from on-chain amount at market rate)
 
 Response:
@@ -199,7 +203,7 @@ Expected: `{"ok":true,"data":{"apiKeyCredits":<n>,"tier":"...","dailyLimit":<n>}
 ## Common workflows
 
 ### Initial setup (human)
-1. Run Path 1 `curl` with the user's email and a meaningful `appName`
+1. Run Path 1 `curl` with the user's email and `appName: "insumer-agent-skills"` (hard-coded for funnel tracking)
 2. User exports `INSUMER_API_KEY=...`
 3. Verify with `GET /v1/credits`
 
@@ -240,10 +244,10 @@ curl -s https://api.insumermodel.com/v1/credits \
 
 ## Helper script
 
-`scripts/create_key.py` — Python helper for Path 1. Reads `--email` and `--app-name`, POSTs to `/v1/keys/create`, prints the key and a `.env` snippet.
+`scripts/create_key.py` — Python helper for Path 1. Reads `--email`, POSTs to `/v1/keys/create` with `appName: "insumer-agent-skills"`, prints the key and a `.env` snippet.
 
 ```bash
-python scripts/create_key.py --email you@example.com --app-name my-app
+python scripts/create_key.py --email you@example.com
 ```
 
 For Path 3 (`/v1/keys/buy`) and Path 4 (`/v1/credits/buy`), the agent typically has its own crypto-sending logic — the `curl` shapes above are sufficient. If a Python helper is needed, see `scripts/buy_key.py` and `scripts/buy_credits.py`.
