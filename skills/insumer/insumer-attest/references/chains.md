@@ -4,20 +4,44 @@ InsumerAPI evaluates wallet conditions on **33 chains** total: 30 EVM, plus Sola
 
 ## EVM (30 chains)
 
-Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **27 of 30 EVM chains** — Ronin, Moonriver, and Viction return `proof.available: false`.
+Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **27 of 30 EVM chains** — Ronin (2020), Moonriver (1285), and Viction (88) return `proof.available: false`.
 
-| Chain | chainId | Merkle proof |
-|---|---|---|
-| Ethereum | 1 | ✓ |
-| OP Mainnet | 10 | ✓ |
-| BNB Smart Chain | 56 | ✓ |
-| Polygon | 137 | ✓ |
-| Base | 8453 | ✓ |
-| Arbitrum One | 42161 | ✓ |
-| Avalanche C-Chain | 43114 | ✓ |
-| ... (full table — see openapi.yaml `ChainId` enum and `/v1/chains` endpoint) | | |
+Full supported set, from the canonical `ChainId` enum in <https://insumermodel.com/openapi.yaml>:
 
-For the canonical, always-current list, query `GET https://api.insumermodel.com/v1/chains` or check the `ChainId` schema in <https://insumermodel.com/openapi.yaml>.
+| Chain | chainId |
+|---|---|
+| Ethereum | 1 |
+| OP Mainnet (Optimism) | 10 |
+| BNB Smart Chain | 56 |
+| Viction | 88 |
+| Gnosis | 100 |
+| Unichain | 130 |
+| Polygon | 137 |
+| Sonic | 146 |
+| opBNB | 204 |
+| zkSync Era | 324 |
+| Scroll | 534352 |
+| World Chain | 480 |
+| Mantle | 5000 |
+| Linea | 59144 |
+| Blast | 81457 |
+| Base | 8453 |
+| Soneium | 1868 |
+| Ronin | 2020 |
+| Berachain | 80094 |
+| Sei | 1329 |
+| Moonbeam | 1284 |
+| Moonriver | 1285 |
+| ApeChain | 33139 |
+| Celo | 42220 |
+| Arbitrum One | 42161 |
+| Avalanche C-Chain | 43114 |
+| Ink | 57073 |
+| Plume | 98866 |
+| Chiliz | 88888 |
+| Taiko | 167000 |
+
+For the always-current canonical list, check the `ChainId` schema in <https://insumermodel.com/openapi.yaml>.
 
 ## Non-EVM (3 chains)
 
