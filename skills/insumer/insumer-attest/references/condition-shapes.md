@@ -11,7 +11,7 @@ Threshold check on a fungible token balance.
   "type": "token_balance",
   "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "chainId": 8453,
-  "threshold": 100,
+  "threshold": "100",
   "decimals": 6,
   "label": "USDC >= 100 on Base"
 }
@@ -21,7 +21,7 @@ Threshold check on a fungible token balance.
 |---|---|---|
 | `contractAddress` | yes (EVM/Solana/XRPL) | Token contract. For XRPL: `"native"` for XRP, or the issuer r-address for trust lines. For Bitcoin: must be `"native"`. |
 | `chainId` | yes | Numeric for EVM, `"solana"`/`"xrpl"`/`"bitcoin"` for non-EVM |
-| `threshold` | yes | Minimum balance in **human units**. Must be `> 0` when `proof: "merkle"` (use `0.000001` for prove-any-balance). |
+| `threshold` | yes | Minimum balance in **human units**, as a **decimal string** (`"100"`, `"0.000001"` — not a JSON number). Keys signing with `kid: insumer-attest-v2` (created from 2026-06-10) reject a number with a `400`; a string is accepted by v1 and v2 alike. Must be `> 0` when `proof: "merkle"` (use `"0.000001"` for prove-any-balance). |
 | `decimals` | recommended | **Always set explicitly for stablecoins** (USDC/USDT/USDC.e are `6`). API defaults to `18` if omitted. Auto-detected for EVM ERC-20s when reliable. |
 | `currency` | XRPL only | Trust line currency code (e.g. `"RLUSD"`, `"USDC"`) |
 | `label` | recommended | Human-readable label (max 100 chars) |
@@ -122,7 +122,7 @@ Up to 10 conditions per request. Overall `pass` is `true` only if **every** cond
       "type": "token_balance",
       "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "chainId": 8453,
-      "threshold": 100,
+      "threshold": "100",
       "decimals": 6,
       "label": "USDC >= 100 on Base"
     },
@@ -148,10 +148,10 @@ Pass multiple wallet fields to verify across ecosystems:
   "xrplWallet": "rN7n...",
   "bitcoinWallet": "bc1q...",
   "conditions": [
-    { "type": "token_balance", "chainId": 1, "contractAddress": "0x...", "threshold": ... },
-    { "type": "token_balance", "chainId": "solana", "contractAddress": "EPjF...", "threshold": ... },
-    { "type": "token_balance", "chainId": "xrpl", "contractAddress": "rMxC...", "currency": "RLUSD", "threshold": ... },
-    { "type": "token_balance", "chainId": "bitcoin", "contractAddress": "native", "threshold": 0.01 }
+    { "type": "token_balance", "chainId": 1, "contractAddress": "0x...", "threshold": "1000" },
+    { "type": "token_balance", "chainId": "solana", "contractAddress": "EPjF...", "threshold": "100" },
+    { "type": "token_balance", "chainId": "xrpl", "contractAddress": "rMxC...", "currency": "RLUSD", "threshold": "50" },
+    { "type": "token_balance", "chainId": "bitcoin", "contractAddress": "native", "threshold": "0.01" }
   ]
 }
 ```

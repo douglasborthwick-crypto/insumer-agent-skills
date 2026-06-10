@@ -74,7 +74,7 @@ curl -X POST https://api.insumermodel.com/v1/attest \
         "type": "token_balance",
         "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         "chainId": 8453,
-        "threshold": 100,
+        "threshold": "100",
         "decimals": 6,
         "label": "USDC >= 100 on Base"
       }
@@ -141,7 +141,7 @@ curl -X POST https://api.insumermodel.com/v1/attest \
         "type": "token_balance",
         "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         "chainId": 8453,
-        "threshold": 100,
+        "threshold": "100",
         "decimals": 6,
         "label": "USDC >= 100 on Base"
       }
@@ -165,7 +165,7 @@ curl -X POST https://api.insumermodel.com/v1/attest \
         "contractAddress": "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De",
         "chainId": "xrpl",
         "currency": "RLUSD",
-        "threshold": 50,
+        "threshold": "50",
         "label": "RLUSD >= 50 on XRPL"
       }
     ]
@@ -181,6 +181,7 @@ When emitting integration code that calls `/v1/attest`, the agent MUST:
 1. **Read the API key from an env var.** Never inline `insr_live_...`.
 2. **Verify the signature offline.** Pair this skill with `insumer-jwks-verify`. The signed boolean is the product — the JSON body alone is untrusted.
 3. **Set `decimals` explicitly for stablecoins.** USDC, USDT, USDC.e are all `6` decimals on every chain. The API defaults to `18` when omitted — getting this wrong silently fails the threshold check.
+3a. **Send the `token_balance` `threshold` as a decimal string** (`"100"`, not `100`). Keys created from 2026-06-10 sign with `kid: insumer-attest-v2` and reject a JSON number with a `400`; a string is accepted by both v1 and v2 keys.
 4. **Call from a backend, not a browser.** The API key is a backend credential.
 5. **Don't cache the verdict.** Cache the JWKS (the `jose` library's `createRemoteJWKSet` does this for you). Pass/fail expires in 30 minutes — wallet state changes.
 6. **Don't request `proof: "merkle"` unless the caller needs the raw balance.** Standard mode is boolean-not-balance by construction; Merkle mode opts out of that privacy property.
