@@ -2,7 +2,7 @@
 name: insumer-attest
 description: >
   Wallet auth via InsumerAPI — condition-based access with cryptographically
-  verifiable, ES256-signed, JWKS-verifiable boolean responses across 33 chains.
+  verifiable, ES256-signed, JWKS-verifiable boolean responses across 38 chains.
   Use when the user needs a "verified yes or no" on whether a wallet satisfies
   an on-chain condition (token balance, NFT ownership, EAS attestation,
   Farcaster ID), wants to gate a feature by what a wallet holds, add token
@@ -32,11 +32,11 @@ Wallet auth is the OAuth-equivalent for what a wallet holds. The pattern is **re
 
 ## Capabilities
 
-- Single-call attestation across 33 chains: 30 EVM, Solana, XRPL, Bitcoin
+- Single-call attestation across 38 chains: 32 EVM, Solana, XRPL, Bitcoin, Tron, Stellar, Sui
 - Up to 10 conditions per request — overall `pass` is `true` only if every condition is `true`
-- Four condition types: `token_balance`, `nft_ownership`, `eas_attestation`, `farcaster_id`
+- Nine condition types: `token_balance`, `nft_ownership` (34 of 38 chains: EVM + Solana + XRPL), `eas_attestation`, `farcaster_id`, `evm_view_call` (single-address-argument view function returning bool; `selector` required, RPC EVM only), `ratio_to_amount`, `ratio_to_supply`, `erc8004_agent` (Base; `agentId` required), `erc7710_delegation` (Base; `delegationManager`, `expectedDelegator`, `delegation` required; max 3 per call, 5-minute expiry)
 - ES256 signature on every response, with optional ES256 JWT (`format: "jwt"`) for standard JWT-library verification
-- Optional EIP-1186 Merkle storage proofs (`proof: "merkle"`) on token_balance conditions for 27 EVM chains
+- Optional EIP-1186 Merkle storage proofs (`proof: "merkle"`) on token_balance conditions for 28 EVM chains, plus revocation-slot proofs for erc7710_delegation on the verified v1.3.0 manager
 - 30-minute attestation TTL (`expiresAt` in response)
 
 ## Setup

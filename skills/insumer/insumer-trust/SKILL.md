@@ -2,7 +2,7 @@
 name: insumer-trust
 description: >
   InsumerAPI wallet trust profile — curated multi-dimensional condition-based
-  access bundle for a single wallet. 36 base checks across 4 dimensions
+  access bundle for a single wallet. 44 base checks across 5 dimensions
   (stablecoins, governance, NFTs, staking) on EVM, plus optional Solana USDC,
   XRPL stablecoins, and Bitcoin holdings. Use when the user wants a pre-built
   wallet snapshot rather than specifying conditions one-by-one — e.g.
@@ -17,22 +17,24 @@ metadata:
 
 # InsumerAPI Wallet Trust Profile
 
-A curated condition bundle for a single wallet. Same primitive as `insumer-attest` (read → evaluate → sign), but the conditions are pre-defined — 36 base checks across 4 dimensions, with optional cross-chain extensions. **Boolean, not balance, on every check.**
+A curated condition bundle for a single wallet. Same primitive as `insumer-attest` (read → evaluate → sign), but the conditions are pre-defined — 44 base checks across 5 dimensions, with optional cross-chain extensions. **Boolean, not balance, on every check.**
 
 Pick this skill when the developer wants a snapshot. Pick `insumer-attest` when they want to specify their own conditions.
 
 ## What you get
 
-- **36 base checks** across **4 dimensions** on EVM:
+- **44 base checks** across **5 dimensions**:
   - **Stablecoins** — USDC and USDT balances on each major EVM chain
   - **Governance** — major governance token holdings
   - **NFTs** — collection holdings
   - **Staking** — staked balances on major staking protocols
+  - **Institutional stablecoins** — EURCV, USDCV, USDC, and BENJI across Ethereum, Solana, XRPL, Stellar, and Sui
 - **Optional extensions** (when extra wallet addresses are provided):
   - **Solana USDC** — pass `solanaWallet`
   - **XRPL stablecoins** — pass `xrplWallet` (RLUSD + USDC checks)
   - **Bitcoin holdings** — pass `bitcoinWallet` (native BTC balance)
-- Up to 39 total checks when all extensions are included
+  - **Tron USDT** — pass `tronWallet` (USDT-TRC20)
+- Up to 49 total checks across 27 chains when all extensions are included
 - Each check returns its own boolean; the response includes per-dimension and overall summaries
 - 3 credits standard, 6 credits with `proof: "merkle"`
 

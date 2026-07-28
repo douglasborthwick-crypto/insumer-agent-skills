@@ -1,10 +1,10 @@
 # Chain Coverage
 
-InsumerAPI evaluates wallet conditions on **33 chains** total: 30 EVM, plus Solana, XRPL, and Bitcoin.
+InsumerAPI evaluates wallet conditions on **38 chains** total: 32 EVM, plus Solana, XRPL, Bitcoin, Tron, Stellar, and Sui.
 
-## EVM (30 chains)
+## EVM (32 chains)
 
-Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **27 of 30 EVM chains** — Ronin (2020), Moonriver (1285), and Viction (88) return `proof.available: false`.
+Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **28 of 32 EVM chains** — Ronin (2020), Moonriver (1285), and Viction (88) return `proof.available: false`.
 
 Full supported set, from the canonical `ChainId` enum in <https://insumermodel.com/openapi.yaml>:
 
@@ -40,10 +40,12 @@ Full supported set, from the canonical `ChainId` enum in <https://insumermodel.c
 | Plume | 98866 |
 | Chiliz | 88888 |
 | Taiko | 167000 |
+| XDC Network | 50 |
+| Robinhood Chain | 4663 |
 
 For the always-current canonical list, check the `ChainId` schema in <https://insumermodel.com/openapi.yaml>.
 
-## Non-EVM (3 chains)
+## Non-EVM (6 chains)
 
 For these chains, use the dedicated wallet field (not `wallet`) and pass the chainId as a string:
 
@@ -52,6 +54,9 @@ For these chains, use the dedicated wallet field (not `wallet`) and pass the cha
 | Solana | `"solana"` | `solanaWallet` | SOL (9 decimals) | SPL token by mint address (`contractAddress`) | ✗ |
 | XRPL | `"xrpl"` | `xrplWallet` | XRP (`contractAddress: "native"`) | Trust line tokens (`currency` field) | ✗ |
 | Bitcoin | `"bitcoin"` | `bitcoinWallet` | BTC (`contractAddress: "native"`) | n/a | ✗ |
+| Tron | `"tron"` | `tronWallet` | TRX (`contractAddress: "native"`) | TRC-20 by contract address | ✗ |
+| Stellar | `"stellar"` | `stellarWallet` | XLM (`contractAddress: "native"`) | Classic trustline assets (issuer G-address + `assetCode`) | ✗ |
+| Sui | `"sui"` | `suiWallet` | SUI (`contractAddress: "native"`) | Sui-native tokens by fully-qualified Move type string | ✗ |
 
 ### XRPL specifics
 

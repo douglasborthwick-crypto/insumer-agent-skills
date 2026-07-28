@@ -1,6 +1,6 @@
 # Insumer
 
-Agent skills for [InsumerAPI](https://insumermodel.com) — wallet auth and condition-based access across 33 chains. Boolean, not balance. Read → evaluate → sign.
+Agent skills for [InsumerAPI](https://insumermodel.com) — wallet auth and condition-based access across 38 chains. Boolean, not balance. Read → evaluate → sign.
 
 ## Skills
 
