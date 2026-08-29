@@ -15,6 +15,24 @@
       "use": "sig",
       "alg": "ES256",
       "kid": "insumer-attest-v1"
+    },
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "<base64url x coordinate>",
+      "y": "<base64url y coordinate>",
+      "use": "sig",
+      "alg": "ES256",
+      "kid": "insumer-attest-v2"
+    },
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "<base64url x coordinate>",
+      "y": "<base64url y coordinate>",
+      "use": "sig",
+      "alg": "ES256",
+      "kid": "insumer-trust-v2"
     }
   ]
 }
@@ -27,7 +45,7 @@
 | `x`, `y` | base64url | Public key coordinates |
 | `use` | `"sig"` | For signature verification |
 | `alg` | `"ES256"` | ECDSA with SHA-256 |
-| `kid` | `"insumer-attest-v1"` | Current key identifier |
+| `kid` | one of `"insumer-attest-v1"`, `"insumer-attest-v2"`, `"insumer-trust-v2"` | Key identifier. All three resolve to the same key today. Match the `kid` on the response you are verifying, and fail closed if it does not resolve. |
 
 The endpoint is cached for 24 hours at the edge (`Cache-Control: public, max-age=86400`) and never requires authentication.
 

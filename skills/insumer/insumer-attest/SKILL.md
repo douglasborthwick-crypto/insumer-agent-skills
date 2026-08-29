@@ -52,7 +52,7 @@ export INSUMER_API_KEY='insr_live_...'
 - **API base**: `https://api.insumermodel.com`
 - **JWKS URL**: `https://insumermodel.com/.well-known/jwks.json`
 - **Signing algorithm**: ES256 (ECDSA P-256)
-- **Primary kid**: `insumer-attest-v1`
+- **Key IDs (`kid`)**: three over the same P-256 key — `insumer-attest-v2` (attest, every key issued since 2026-06-10), `insumer-trust-v2` (trust), `insumer-attest-v1` (pre-cutover keys, and the commerce discount path). **Resolve the key by the `kid` on the response; never pin one and never take `keys[0]`.** The `kid` also selects the verification rules: v1 signs bare JSON, v2 signs a domain-separated canonical preimage.
 - **Auth header**: `X-API-Key: insr_live_...`
 - **Attestation TTL**: 30 minutes (`expiresAt` in response)
 - **Signature format**: base64 P1363 (88 chars) on the `sig` field; ES256 JWT on the `jwt` field when `format: "jwt"` is requested
@@ -82,7 +82,7 @@ curl -X POST https://api.insumermodel.com/v1/attest \
   }'
 ```
 
-Returns `{ "ok": true, "data": { "attestation": { "pass": true|false, ... }, "sig": "...", "kid": "insumer-attest-v1" }, "meta": { "creditsRemaining": ..., "creditsCharged": 1, ... } }`.
+Returns `{ "ok": true, "data": { "attestation": { "pass": true|false, ... }, "sig": "...", "kid": "insumer-attest-v2" }, "meta": { "creditsRemaining": ..., "creditsCharged": 1, ... } }`.
 
 ### Example 2: NFT ownership
 

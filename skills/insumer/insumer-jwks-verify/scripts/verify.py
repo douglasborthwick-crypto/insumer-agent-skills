@@ -8,7 +8,7 @@ Accepts either:
 
 Usage:
     echo "eyJhbGc..." | python verify.py
-    echo '{"jwt":"eyJhbGc...","kid":"insumer-attest-v1"}' | python verify.py
+    echo '{"jwt":"eyJhbGc...","kid":"insumer-attest-v2"}' | python verify.py
 
 Requires:
     pip install pyjwt[crypto]

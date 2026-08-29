@@ -22,7 +22,7 @@ InsumerAPI signs every `/v1/attest`, `/v1/trust`, and `/v1/trust/batch` response
 
 - **JWKS URL**: `https://insumermodel.com/.well-known/jwks.json`
 - **Algorithm**: ES256 (ECDSA P-256)
-- **Primary kid**: `insumer-attest-v1`
+- **Key IDs (`kid`)**: three over the same P-256 key — `insumer-attest-v2` (attest, every key issued since 2026-06-10), `insumer-trust-v2` (trust), `insumer-attest-v1` (pre-cutover keys, and the commerce discount path). **Resolve the key by the `kid` on the response; never pin one and never take `keys[0]`.** The `kid` also selects the verification rules: v1 signs bare JSON, v2 signs a domain-separated canonical preimage.
 - **JWT issuer claim** (when `format: "jwt"` is requested): `https://api.insumermodel.com`
 - **Raw signature format**: base64 P1363 (88 chars) on the `sig` field
 
@@ -154,7 +154,7 @@ This is belt-and-suspenders — the signature already covers `conditionHash` —
 `scripts/verify.py` — Python helper that takes a JWT or raw response on stdin and verifies it against the public JWKS. Prints `OK` + payload, or `INVALID` + reason.
 
 ```bash
-echo '{"jwt":"eyJhbG...","kid":"insumer-attest-v1"}' | python scripts/verify.py
+echo '{"jwt":"eyJhbG...","kid":"insumer-attest-v2"}' | python scripts/verify.py
 ```
 
 ## Error handling

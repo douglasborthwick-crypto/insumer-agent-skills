@@ -74,12 +74,12 @@ Top-level `proof: "merkle"` (optional) applies to all wallets in the batch and c
           "expiresAt": "2026-..."
         },
         "sig": "...",
-        "kid": "insumer-attest-v1"
+        "kid": "insumer-trust-v2"
       },
       {
         "trust": { "id": "TRST-D4E5F", "wallet": "0xAb58...", ... },
         "sig": "...",
-        "kid": "insumer-attest-v1"
+        "kid": "insumer-trust-v2"
       }
     ],
     "summary": { "requested": 2, "succeeded": 2, "failed": 0 }

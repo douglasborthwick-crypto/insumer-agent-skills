@@ -86,7 +86,7 @@ Response shape (abbreviated):
       }
     },
     "sig": "...",
-    "kid": "insumer-attest-v1"
+    "kid": "insumer-trust-v2"
   },
   "meta": {
     "creditsRemaining": ...,
