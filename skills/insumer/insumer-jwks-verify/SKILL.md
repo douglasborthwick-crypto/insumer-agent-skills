@@ -22,7 +22,7 @@ InsumerAPI signs every `/v1/attest`, `/v1/trust`, and `/v1/trust/batch` response
 
 - **JWKS URL**: `https://insumermodel.com/.well-known/jwks.json`
 - **Algorithm**: ES256 (ECDSA P-256)
-- **Key IDs (`kid`)**: three over the same P-256 key — `insumer-attest-v2` (attest, every key issued since 2026-06-10), `insumer-trust-v2` (trust), `insumer-attest-v1` (pre-cutover keys, and the commerce discount path). **Resolve the key by the `kid` on the response; never pin one and never take `keys[0]`.** The `kid` also selects the verification rules: v1 signs bare JSON, v2 signs a domain-separated canonical preimage.
+- **Key IDs (`kid`)**: five JWKS entries over two keys. Three EC kids on the same P-256 key: `insumer-attest-v2` (attest, every key issued since 2026-06-10), `insumer-trust-v2` (trust), `insumer-attest-v1` (pre-cutover keys, and the commerce discount path). Then two RFC 9964 `AKP` entries for the ML-DSA-65 post-quantum companion key: `insumer-attest-pq1` and `insumer-trust-pq1`, selected by the response `pqKid`. Resolve by kid, never by position; fail closed on an unknown kid.
 - **JWT issuer claim** (when `format: "jwt"` is requested): `https://api.insumermodel.com`
 - **Raw signature format**: base64 P1363 (88 chars) on the `sig` field
 
@@ -30,7 +30,7 @@ InsumerAPI signs every `/v1/attest`, `/v1/trust`, and `/v1/trust/batch` response
 
 InsumerAPI returns **two** verifiable forms in every signed response:
 
-1. **`sig` field** — base64 P1363 ES256 signature over the canonical (sorted-key JSON) of `data.attestation` / `data.trust`. Verify with any ES256 library + the JWKS public key.
+1. **`sig` field**: base64 P1363 ES256 signature over the preimage the `kid` selects (see "What's signed" in `references/jwks-format.md`): for `insumer-attest-v2`, the domain tag `insumer.attestation.v2` + newline + recursively sorted canonical JSON of `{v:2, id, pass, results, attestedAt}`; for `insumer-attest-v1`, the bare insertion-order `JSON.stringify({id, pass, results, attestedAt})`; for trust profiles, the trust domain tag + canonical JSON of the whole trust object. Verify with any ES256 library + the JWKS key the `kid` names. Every response also carries `pqSig`/`pqKid`, an ML-DSA-65 companion over the same preimage under a post-quantum domain tag (spec Check 6).
 2. **`jwt` field** *(only when `"format": "jwt"` is in the request body)* — standard ES256 JWT with the same payload as standard JWT claims. Verify with any standard JWT library pointed at the JWKS URL.
 
 The `jwt` path is easier when the consumer is already using a JWT library; the `sig` path is more compact and avoids JWT envelope overhead. Both produce the same security guarantees.

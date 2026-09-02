@@ -33,19 +33,36 @@
       "use": "sig",
       "alg": "ES256",
       "kid": "insumer-trust-v2"
+    },
+    {
+      "kty": "AKP",
+      "alg": "ML-DSA-65",
+      "use": "sig",
+      "kid": "insumer-attest-pq1",
+      "pub": "<base64url ML-DSA-65 public key>"
+    },
+    {
+      "kty": "AKP",
+      "alg": "ML-DSA-65",
+      "use": "sig",
+      "kid": "insumer-trust-pq1",
+      "pub": "<base64url ML-DSA-65 public key>"
     }
   ]
 }
 ```
 
+Five entries over two keys: the three `EC` entries share one P-256 key and are selected by the response `kid`; the two `AKP` entries (RFC 9964) share one ML-DSA-65 key and are selected by the response `pqKid`. They are appended after the EC entries. Match on the kid you hold, never on position.
+
 | Field | Value | Meaning |
 |---|---|---|
-| `kty` | `"EC"` | Elliptic-curve key |
+| `kty` | `"EC"` or `"AKP"` | Elliptic-curve key (classical) or Algorithm Key Pair (post-quantum, RFC 9964) |
 | `crv` | `"P-256"` | NIST P-256 curve (secp256r1) |
 | `x`, `y` | base64url | Public key coordinates |
 | `use` | `"sig"` | For signature verification |
-| `alg` | `"ES256"` | ECDSA with SHA-256 |
-| `kid` | one of `"insumer-attest-v1"`, `"insumer-attest-v2"`, `"insumer-trust-v2"` | Key identifier. All three resolve to the same key today. Match the `kid` on the response you are verifying, and fail closed if it does not resolve. |
+| `alg` | `"ES256"` or `"ML-DSA-65"` | ECDSA with SHA-256 on the EC entries; FIPS 204 ML-DSA-65 on the AKP entries |
+| `pub` | base64url | ML-DSA-65 public key (AKP entries only) |
+| `kid` | `"insumer-attest-v1"`, `"insumer-attest-v2"`, `"insumer-trust-v2"` (EC); `"insumer-attest-pq1"`, `"insumer-trust-pq1"` (AKP) | Key identifier. The three EC kids resolve to the same key; the two AKP kids resolve to the same post-quantum key. Match the `kid` (or `pqKid`) on the response you are verifying, and fail closed if it does not resolve. |
 
 The endpoint is cached for 24 hours at the edge (`Cache-Control: public, max-age=86400`) and never requires authentication.
 
@@ -103,12 +120,7 @@ This is belt-and-suspenders — the JWT signature already covers `conditionHash`
 
 ## Key rotation
 
-Key rotation is signaled via the `kid` field in signed responses. When a new key is rolled in:
-
-1. JWKS endpoint returns **both** the old and new keys for the rotation window
-2. New responses are signed with the new `kid`
-3. Old `kid` continues to verify historical attestations until the rotation window closes
-4. After the window, old `kid` is removed from JWKS — historical attestations beyond the 30-min TTL are no longer verifiable (which is correct: they've expired)
+Key changes are additive and signalled by the `kid` on each response. To date no kid has been removed from the JWKS: the v2 scheme (2026-06) added kids beside `insumer-attest-v1`, and the post-quantum companion (2026-09) added the two `AKP` entries beside the EC ones. Old kids keep verifying the artifacts they signed. A kid that does not resolve is unverifiable, not refuted.
 
 Verifiers should:
 - Always look up the public key by `kid` (don't hardcode)
