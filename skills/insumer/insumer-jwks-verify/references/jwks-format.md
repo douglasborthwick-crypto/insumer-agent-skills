@@ -51,11 +51,17 @@ The endpoint is cached for 24 hours at the edge (`Cache-Control: public, max-age
 
 ## What's signed
 
-For `/v1/attest`:
-- The `data.attestation` object — including `pass`, `results`, `conditionHash`, `blockNumber`, `blockTimestamp`, `wallet`, `expiresAt`
+For `/v1/attest` (raw form), the signed preimage is selected by `data.kid`:
+- `insumer-attest-v2`: `"insumer.attestation.v2" + "\n" + canonical_json({ v: 2, id, pass, results, attestedAt })`, keys sorted recursively.
+- `insumer-attest-v1`: the bare `JSON.stringify({ id, pass, results, attestedAt })` in that insertion order.
+- Signed through `results`: every `evaluatedCondition`, `conditionHash`, `met`, and each result's chain anchor (`blockNumber`/`blockTimestamp`, or `slot`, `ledgerIndex`, `blockHeight`, `checkpointSequence`).
+- NOT signed: `expiresAt` (bound to the signed `attestedAt` by spec Check 4) and the top-level `wallet` echo. In JWT form the wallet is the signed `sub` claim.
+- Beside `sig`/`kid`, every response also carries `pqSig`/`pqKid` (ML-DSA-65 over the post-quantum domain tag plus the same classical preimage); in JWT form a sibling `pqJwt`.
 
-For `/v1/trust` and `/v1/trust/batch`:
-- The `data.trust` object (or each entry in `data.trust[]` for batch) — including `id`, `wallet`, `dimensions`, `conditionSetVersion`, `expiresAt`
+For `/v1/trust` and `/v1/trust/batch`, selected by `kid`:
+- `insumer-trust-v2`: `"insumer.trust.v2" + "\n" + canonical_json(trust)` where `trust` is the whole returned object (`id`, `wallet`, `conditionSetVersion`, `dimensions`, `summary`, `profiledAt`, `expiresAt`), no `v` member.
+- `insumer-attest-v1`: the bare `JSON.stringify(trust)` in that order.
+- `expiresAt` IS inside the trust preimage, unlike attestations.
 
 ## JWT claim mapping
 

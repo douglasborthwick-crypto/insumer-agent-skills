@@ -113,8 +113,14 @@ npm install insumer-verify
 ```javascript
 import { verifyAttestation } from 'insumer-verify';
 
-const ok = await verifyAttestation(response);
-// ok === true if signature valid, throws if invalid or kid unknown
+// Pass the full response envelope. The result is an object, never a bare boolean.
+const result = await verifyAttestation(response, {
+  jwksUrl: 'https://insumermodel.com/.well-known/jwks.json',
+});
+// result.valid is the AND of the checks; result.checks reports each one separately:
+// signature, conditionHash, freshness, expiry, and pq (the post-quantum companion:
+// verified | refuted | absent | unverifiable). Unknown kid fails closed.
+if (!result.valid) throw new Error('attestation rejected: ' + JSON.stringify(result.checks));
 ```
 
 ## Recipe 4: Conditional verification + tamper detection
@@ -122,14 +128,21 @@ const ok = await verifyAttestation(response);
 Beyond signature verification, you can independently re-derive the `conditionHash` to confirm the condition wasn't tampered with:
 
 ```javascript
-import { keccak256 } from 'viem';
+import { createHash } from 'node:crypto';
+
+// conditionHash = "0x" + SHA-256 over the canonical JSON of evaluatedCondition:
+// keys sorted recursively at every level (RFC 8785 style), no whitespace.
+function canonicalize(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonicalize).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort()
+      .map((k) => JSON.stringify(k) + ':' + canonicalize(value[k])).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
 
 function recomputeConditionHash(evaluatedCondition) {
-  const canonical = JSON.stringify(
-    evaluatedCondition,
-    Object.keys(evaluatedCondition).sort()
-  );
-  return '0x' + keccak256(new TextEncoder().encode(canonical));
+  return '0x' + createHash('sha256').update(canonicalize(evaluatedCondition)).digest('hex');
 }
 
 // After signature verification, re-derive and compare
