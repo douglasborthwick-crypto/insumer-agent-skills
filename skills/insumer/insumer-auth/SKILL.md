@@ -9,7 +9,7 @@ description: >
   (on-chain, no human).
 allowed-tools: Bash
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   author: InsumerAPI
 ---
 
@@ -37,8 +37,9 @@ There are **four** ways to get or extend a key. Pick the one that matches the ca
 - **Platform wallet — EVM**: `0xAd982CB19aCCa2923Df8F687C0614a7700255a23`
 - **Platform wallet — Solana**: `6a1mLjefhvSJX1sEX8PTnionbE9DqoYjU6F6bNkT4Ydr`
 - **Platform wallet — Bitcoin**: `bc1qg7qnerdhlmdn899zemtez5tcx2a2snc0dt9dt0`
+- **Platform wallet: Tron**: `TC5yvwkAMakkXtUxYiu2Yn1xbBcwYuD6cn`
 - **Volume discounts** (paths 3 and 4): $5–$99 → $0.04/call, $100–$499 → $0.03/call (25% off), $500+ → $0.02/call (50% off)
-- **Supported payment chains**: USDC/USDT on any major EVM chain or Solana, BTC on Bitcoin (1 confirmation, market-rate USD conversion)
+- **Supported payment chains (these ten and no others)**: USDC/USDT on Ethereum (1), Base (8453), Polygon (137), Arbitrum (42161), Optimism (10), BNB Chain (56), Avalanche (43114) or Solana; USDT-TRC20 on Tron; BTC on Bitcoin (1 confirmation, market-rate USD conversion). The other chains the API can read are NOT payment chains, and funds sent on a chain outside this list cannot be recovered
 
 ---
 
@@ -94,7 +95,7 @@ Agent-friendly bootstrap. The agent sends USDC, USDT, or BTC to the platform wal
 
 ### Step 1: Send payment
 
-Send the desired amount (minimum $5) of USDC, USDT, or BTC to the platform wallet on a supported chain. For EVM and Solana the address is the literal `recipient`; for BTC, send to the Bitcoin address.
+Send the desired amount (minimum $5) of USDC, USDT, or BTC to the platform wallet on one of the ten supported payment chains listed above (USDT-TRC20 on Tron included). For EVM and Solana the address is the literal `recipient`; for BTC, send to the Bitcoin address; for Tron, send to the Tron address.
 
 ### Step 2: Call `/v1/keys/buy` with the transaction hash
 
@@ -113,7 +114,7 @@ curl -s -X POST https://api.insumermodel.com/v1/keys/buy \
 
 Required fields:
 - `txHash` — the transaction proving payment
-- `chainId` — the chain the payment was sent on (use `"solana"` or `"bitcoin"` for non-EVM)
+- `chainId` — the chain the payment was sent on (use `"solana"`, `"bitcoin"` or `"tron"` for non-EVM)
 - `appName` — name for the new key. Hard-code `"insumer-agent-skills"`.
 - `amount` — stablecoin amount sent. Optional for BTC (USD value derived from on-chain amount at market rate)
 

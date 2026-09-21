@@ -25,7 +25,7 @@ OAuth proves who the user is. **Wallet auth proves what the wallet holds.** Insu
 
 | Skill | What it does | Version |
 | ----- | ------------ | ------- |
-| [insumer-auth](skills/insumer/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.0 |
+| [insumer-auth](skills/insumer/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.1 |
 | [insumer-attest](skills/insumer/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.1 |
 | [insumer-trust](skills/insumer/insumer-trust/) | Curated wallet trust profile, 44 base checks (`/v1/trust`) | 0.1.0 |
 | [insumer-trust-batch](skills/insumer/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.0 |
