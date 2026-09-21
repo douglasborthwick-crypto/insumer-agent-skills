@@ -8,7 +8,7 @@ description: >
   independently signed; response supports partial success.
 allowed-tools: Bash
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   author: InsumerAPI
 ---
 
@@ -16,7 +16,7 @@ metadata:
 
 Same curated condition-based access bundle as `insumer-trust`, but accepts up to **10 wallets** in one request (5-8x faster than sequential calls). Each wallet's profile is independently signed; the response supports partial success — failures for one wallet don't fail the rest.
 
-Each wallet's per-dimension attestations retain their original issuer signatures. **No orchestrator wrap.**
+Each wallet's profile is signed once, as a whole, by InsumerAPI (`kid: insumer-trust-v2`, with the post-quantum companion). There are no per-dimension signatures and no signature over the batch. **Do not add an orchestrator wrap:** carry each signed profile exactly as issued.
 
 ## Setup
 
@@ -53,6 +53,9 @@ export INSUMER_API_KEY='insr_live_...'
 | `solanaWallet` | optional | Adds Solana USDC dimension to this wallet's profile |
 | `xrplWallet` | optional | Adds XRPL stablecoin dimension (RLUSD + USDC) |
 | `bitcoinWallet` | optional | Adds Bitcoin Holdings dimension (native BTC) |
+| `tronWallet` | optional | Adds Tron dimension (USDT-TRC20) |
+| `stellarWallet` | optional | Evaluates the Stellar checks in the institutional stablecoins dimension |
+| `suiWallet` | optional | Evaluates the Sui check in the institutional stablecoins dimension |
 
 Top-level `proof: "merkle"` (optional) applies to all wallets in the batch and costs 6 credits per wallet.
 
@@ -69,7 +72,7 @@ Top-level `proof: "merkle"` (optional) applies to all wallets in the batch and c
           "wallet": "0xd8dA...",
           "conditionSetVersion": "v1",
           "dimensions": { ... },
-          "summary": { "totalChecks": 17, "totalPassed": 6, "totalFailed": 11, ... },
+          "summary": { "totalChecks": 44, "totalPassed": 6, "totalFailed": 32, "totalNotEvaluated": 6, ... },
           "profiledAt": "2026-...",
           "expiresAt": "2026-..."
         },
