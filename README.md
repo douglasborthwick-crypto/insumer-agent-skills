@@ -1,6 +1,6 @@
 # Insumer Agent Skills
 
-**Wallet auth as agent skills.** Install once — every Claude Code, Cursor, Copilot, Codex, Gemini CLI, and 25+ other [agentskills.io](https://agentskills.io)-compatible agent gets native knowledge of how to call [InsumerAPI](https://insumermodel.com) for condition-based access across 38 chains.
+**Wallet auth as agent skills.** Install once, and every Claude Code, Cursor, Copilot, Codex, Gemini CLI, and 25+ other [agentskills.io](https://agentskills.io)-compatible agent gets native knowledge of how to call [InsumerAPI](https://insumermodel.com) for condition-based access across 37 chains.
 
 > **Boolean, not balance. Verified yes or no. Provable and private.**
 
@@ -26,7 +26,7 @@ OAuth proves who the user is. **Wallet auth proves what the wallet holds.** Insu
 | Skill | What it does | Version |
 | ----- | ------------ | ------- |
 | [insumer-auth](skills/insumer/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.0 |
-| [insumer-attest](skills/insumer/insumer-attest/) | Custom condition attestation across 38 chains (`/v1/attest`) | 0.1.0 |
+| [insumer-attest](skills/insumer/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.1 |
 | [insumer-trust](skills/insumer/insumer-trust/) | Curated wallet trust profile, 44 base checks (`/v1/trust`) | 0.1.0 |
 | [insumer-trust-batch](skills/insumer/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.0 |
 | [insumer-jwks-verify](skills/insumer/insumer-jwks-verify/) | Offline ES256 verification of returned JWTs against the public JWKS | 0.1.0 |
@@ -91,7 +91,7 @@ The agent ecosystem already knows how to *call* HTTP APIs. What it doesn't know 
 
 - **Boolean, not balance** by construction (standard mode never returns the underlying balance)
 - **Offline ES256 verification** against the public JWKS (the signature is the product, not the JSON body)
-- **Per-chain stablecoin decimals** (USDC/USDT/USDC.e are 6, not 18 — silent failure if you guess)
+- **`decimals` is a cross-check, never an input** (leave it out: the token's own decimals are read from the chain, and a sent value that differs is rejected with a `400`)
 - **Backend-only key handling** (never expose `insr_live_...` in browser JS)
 - **Read → evaluate → sign** primitive (the whole point — not just an HTTP call)
 

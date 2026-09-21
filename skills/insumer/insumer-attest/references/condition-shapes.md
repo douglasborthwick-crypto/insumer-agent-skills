@@ -1,6 +1,6 @@
 # Condition Shapes
 
-Every condition object passed in `/v1/attest` (`conditions[]` array, 1–10 items) follows one of four shapes determined by the `type` field.
+Every condition object passed in `/v1/attest` (`conditions[]` array, 1–10 items) has a shape determined by its `type` field. The API accepts nine condition types. This file documents the four core shapes (`token_balance`, `nft_ownership`, `eas_attestation`, `farcaster_id`). The other five (`evm_view_call`, `ratio_to_amount`, `ratio_to_supply`, `erc8004_agent`, `erc7710_delegation`) are listed with their required fields under Capabilities in this skill's `SKILL.md` and specified in full in the [OpenAPI spec](https://insumermodel.com/openapi.yaml).
 
 ## 1. `token_balance`
 
@@ -12,17 +12,16 @@ Threshold check on a fungible token balance.
   "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "chainId": 8453,
   "threshold": "100",
-  "decimals": 6,
   "label": "USDC >= 100 on Base"
 }
 ```
 
 | Field | Required | Notes |
 |---|---|---|
-| `contractAddress` | yes (EVM/Solana/XRPL) | Token contract. For XRPL: `"native"` for XRP, or the issuer r-address for trust lines. For Bitcoin: must be `"native"`. |
-| `chainId` | yes | Numeric for EVM, `"solana"`/`"xrpl"`/`"bitcoin"` for non-EVM |
+| `contractAddress` | yes | Token contract (0x + 40 hex on EVM), or `"native"` for the chain's native coin. `"native"` is for `token_balance` and `ratio_to_amount` only. For XRPL: `"native"` for XRP, or the issuer r-address for trust lines. For Bitcoin: must be `"native"`. For Sui: always a coin type (`address::module::Name`); native SUI is `"0x2::sui::SUI"` and `"native"` is a `400`. |
+| `chainId` | yes | Numeric for EVM, `"solana"`/`"xrpl"`/`"bitcoin"`/`"tron"`/`"stellar"`/`"sui"` for non-EVM |
 | `threshold` | yes | Minimum balance in **human units**, as a **decimal string** (`"100"`, `"0.000001"` — not a JSON number). Keys signing with `kid: insumer-attest-v2` (created from 2026-06-10) reject a number with a `400`; a string is accepted by v1 and v2 alike. Must be `> 0` when `proof: "merkle"` (use `"0.000001"` for prove-any-balance). |
-| `decimals` | recommended | **Always set explicitly for stablecoins** (USDC/USDT/USDC.e are `6`). API defaults to `18` if omitted. Auto-detected for EVM ERC-20s when reliable. |
+| `decimals` | optional | Cross-check only; leave it out. The token's own decimals are always read from the chain. If sent, a value that differs from the token's own decimals is rejected with a `400`. |
 | `currency` | XRPL only | Trust line currency code (e.g. `"RLUSD"`, `"USDC"`) |
 | `label` | recommended | Human-readable label (max 100 chars) |
 
@@ -43,7 +42,7 @@ Check whether the wallet owns at least one NFT in a collection.
 
 | Field | Required | Notes |
 |---|---|---|
-| `contractAddress` | yes | NFT contract address (ERC-721 or ERC-1155 on EVM, NFToken issuer on XRPL) |
+| `contractAddress` | yes | NFT contract address (ERC-721 or ERC-1155 on EVM, NFToken issuer on XRPL). 0x + 40 hex on EVM; `"native"` is a `400` here (use `token_balance` for the native coin). |
 | `chainId` | yes | |
 | `taxon` | XRPL only | Filter by issuer + taxon (optional, NFToken filtering on XRPL) |
 | `label` | recommended | |
@@ -93,7 +92,7 @@ Available templates (current list — fetch live from `GET https://api.insumermo
 | `schemaId` | one-of | Raw EAS schema ID (with `attester`, `indexer`, `chainId`) |
 | `attester` | with schemaId | Trusted attester address |
 | `indexer` | with schemaId | EAS indexer contract address |
-| `chainId` | with schemaId | |
+| `chainId` | with schemaId | EAS is read on Ethereum (1), Optimism (10), Polygon (137), Base (8453) and Arbitrum (42161) only |
 
 Operator: `valid`.
 
@@ -123,7 +122,6 @@ Up to 10 conditions per request. Overall `pass` is `true` only if **every** cond
       "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "chainId": 8453,
       "threshold": "100",
-      "decimals": 6,
       "label": "USDC >= 100 on Base"
     },
     {

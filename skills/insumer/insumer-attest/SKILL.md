@@ -2,7 +2,7 @@
 name: insumer-attest
 description: >
   Wallet auth via InsumerAPI — condition-based access with cryptographically
-  verifiable, ES256-signed, JWKS-verifiable boolean responses across 38 chains.
+  verifiable, ES256-signed, JWKS-verifiable boolean responses across 37 chains.
   Use when the user needs a "verified yes or no" on whether a wallet satisfies
   an on-chain condition (token balance, NFT ownership, EAS attestation,
   Farcaster ID), wants to gate a feature by what a wallet holds, add token
@@ -10,7 +10,7 @@ description: >
   Read → evaluate → sign, in one call.
 allowed-tools: Bash
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   author: InsumerAPI
 ---
 
@@ -32,11 +32,11 @@ Wallet auth is the OAuth-equivalent for what a wallet holds. The pattern is **re
 
 ## Capabilities
 
-- Single-call attestation across 38 chains: 32 EVM, Solana, XRPL, Bitcoin, Tron, Stellar, Sui
+- Single-call attestation across 37 chains: 31 EVM, Solana, XRPL, Bitcoin, Tron, Stellar, Sui
 - Up to 10 conditions per request — overall `pass` is `true` only if every condition is `true`
-- Nine condition types: `token_balance`, `nft_ownership` (34 of 38 chains: EVM + Solana + XRPL), `eas_attestation`, `farcaster_id`, `evm_view_call` (single-address-argument view function returning bool; `selector` required, RPC EVM only), `ratio_to_amount`, `ratio_to_supply`, `erc8004_agent` (Base; `agentId` required), `erc7710_delegation` (Base; `delegationManager`, `expectedDelegator`, `delegation` required; max 3 per call, 5-minute expiry)
+- Nine condition types: `token_balance`, `nft_ownership` (33 of 37 chains: EVM + Solana + XRPL), `eas_attestation` (Ethereum, Optimism, Polygon, Base, Arbitrum), `farcaster_id`, `evm_view_call` (single-address-argument view function returning bool; `selector` required, EVM chains only), `ratio_to_amount`, `ratio_to_supply`, `erc8004_agent` (Base; `agentId` required), `erc7710_delegation` (Base; `delegationManager`, `expectedDelegator`, `delegation` required; max 3 per call, 5-minute expiry)
 - ES256 signature on every response, with optional ES256 JWT (`format: "jwt"`) for standard JWT-library verification
-- Optional EIP-1186 Merkle storage proofs (`proof: "merkle"`) on token_balance conditions for 28 EVM chains, plus revocation-slot proofs for erc7710_delegation on the verified v1.3.0 manager
+- Optional EIP-1186 Merkle storage proofs (`proof: "merkle"`) on token_balance conditions for 27 of the 31 EVM chains (not ZKsync Era, Sei, Viction or XDC Network, nor any non-EVM chain), plus revocation-slot proofs for erc7710_delegation on the verified v1.3.0 manager
 - 30-minute attestation TTL (`expiresAt` in response)
 
 ## Setup
@@ -75,7 +75,6 @@ curl -X POST https://api.insumermodel.com/v1/attest \
         "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         "chainId": 8453,
         "threshold": "100",
-        "decimals": 6,
         "label": "USDC >= 100 on Base"
       }
     ]
@@ -142,7 +141,6 @@ curl -X POST https://api.insumermodel.com/v1/attest \
         "contractAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         "chainId": 8453,
         "threshold": "100",
-        "decimals": 6,
         "label": "USDC >= 100 on Base"
       }
     ]
@@ -180,7 +178,7 @@ When emitting integration code that calls `/v1/attest`, the agent MUST:
 
 1. **Read the API key from an env var.** Never inline `insr_live_...`.
 2. **Verify the signature offline.** Pair this skill with `insumer-jwks-verify`. The signed boolean is the product — the JSON body alone is untrusted.
-3. **Set `decimals` explicitly for stablecoins.** USDC, USDT, USDC.e are all `6` decimals on every chain. The API defaults to `18` when omitted — getting this wrong silently fails the threshold check.
+3. **Do not send `decimals`.** It is optional. Leave it out: the token's own decimals are always read from the chain. If sent it is only a cross-check, and a value that differs from the token's own decimals is rejected with a `400`.
 3a. **Send the `token_balance` `threshold` as a decimal string** (`"100"`, not `100`). Keys created from 2026-06-10 sign with `kid: insumer-attest-v2` and reject a JSON number with a `400`; a string is accepted by both v1 and v2 keys.
 4. **Call from a backend, not a browser.** The API key is a backend credential.
 5. **Don't cache the verdict.** Cache the JWKS (the `jose` library's `createRemoteJWKSet` does this for you). Pass/fail expires in 30 minutes — wallet state changes.
@@ -213,7 +211,7 @@ echo '{"wallet":"0x...","conditions":[{"type":"token_balance",...}]}' | python s
 
 ## References
 
-- [chains.md](references/chains.md) — full 33-chain coverage table
+- [chains.md](references/chains.md): full 37-chain coverage table
 - [condition-shapes.md](references/condition-shapes.md) — every supported condition type with full request shape
 - [InsumerAPI OpenAPI spec](https://insumermodel.com/openapi.yaml)
 - [Public JWKS](https://insumermodel.com/.well-known/jwks.json)

@@ -1,10 +1,10 @@
 # Chain Coverage
 
-InsumerAPI evaluates wallet conditions on **38 chains** total: 32 EVM, plus Solana, XRPL, Bitcoin, Tron, Stellar, and Sui.
+InsumerAPI evaluates wallet conditions on **37 chains** total: 31 EVM, plus Solana, XRPL, Bitcoin, Tron, Stellar, and Sui.
 
-## EVM (32 chains)
+## EVM (31 chains)
 
-Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **28 of 32 EVM chains** — Ronin (2020), Moonriver (1285), and Viction (88) return `proof.available: false`.
+Pass `chainId` as the canonical numeric ID. Merkle storage proofs (`proof: "merkle"`) are available on **27 of 31 EVM chains**. The four without are ZKsync Era (324), Sei (1329), Viction (88) and XDC Network (50). No non-EVM chain has them.
 
 Full supported set, from the canonical `ChainId` enum in <https://insumermodel.com/openapi.yaml>:
 
@@ -30,8 +30,6 @@ Full supported set, from the canonical `ChainId` enum in <https://insumermodel.c
 | Ronin | 2020 |
 | Berachain | 80094 |
 | Sei | 1329 |
-| Moonbeam | 1284 |
-| Moonriver | 1285 |
 | ApeChain | 33139 |
 | Celo | 42220 |
 | Arbitrum One | 42161 |
@@ -42,6 +40,7 @@ Full supported set, from the canonical `ChainId` enum in <https://insumermodel.c
 | Taiko | 167000 |
 | XDC Network | 50 |
 | Robinhood Chain | 4663 |
+| Arc | 5042 |
 
 For the always-current canonical list, check the `ChainId` schema in <https://insumermodel.com/openapi.yaml>.
 
@@ -56,7 +55,7 @@ For these chains, use the dedicated wallet field (not `wallet`) and pass the cha
 | Bitcoin | `"bitcoin"` | `bitcoinWallet` | BTC (`contractAddress: "native"`) | n/a | ✗ |
 | Tron | `"tron"` | `tronWallet` | TRX (`contractAddress: "native"`) | TRC-20 by contract address | ✗ |
 | Stellar | `"stellar"` | `stellarWallet` | XLM (`contractAddress: "native"`) | Classic trustline assets (issuer G-address + `assetCode`) | ✗ |
-| Sui | `"sui"` | `suiWallet` | SUI (`contractAddress: "native"`) | Sui-native tokens by fully-qualified Move type string | ✗ |
+| Sui | `"sui"` | `suiWallet` | SUI (`contractAddress: "0x2::sui::SUI"`; `"native"` is a `400` on Sui) | Any other coin by its full coin type (`address::module::Name`) | ✗ |
 
 ### XRPL specifics
 
@@ -73,25 +72,16 @@ For these chains, use the dedicated wallet field (not `wallet`) and pass the cha
 
 ### Solana specifics
 
-- Native SOL balance: `contractAddress: "native"` (or omit; the API treats this as native by default for Solana)
+- Native SOL balance: `contractAddress: "native"`
 - SPL token balance: `contractAddress` is the mint address (base58)
 - USDC on Solana mint: `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
 - USDT on Solana mint: `Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB`
 
 ## Decimals
 
-Always set `decimals` explicitly for stablecoin conditions to avoid silent failure (the API defaults to `18` when omitted):
+`decimals` is optional. Leave it out: the token's own decimals are always read from the chain. If sent it is only a cross-check, and a value that differs from the token's own decimals is rejected with a `400` naming the token's value. Native coins are fixed (18 on EVM chains, 6 for TRX, 9 for SUI).
 
-| Token | Decimals |
-|---|---|
-| USDC (any chain) | 6 |
-| USDT (any chain) | 6 |
-| USDC.e | 6 |
-| WETH | 18 |
-| DAI | 18 |
-| Most other ERC-20s | 18 |
-
-For tokens you're not sure about, omit `decimals` only if you've confirmed the contract is 18-decimal — otherwise look it up.
+The `threshold` is always in display units, as a decimal string: `"100"` means 100 USDC whatever the token's decimals are. Do not guess a token's decimals from its symbol. The same stablecoin can have different decimals on different chains.
 
 ## See also
 
