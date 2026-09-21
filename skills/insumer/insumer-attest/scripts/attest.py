@@ -19,7 +19,7 @@ Request body shape (see ../SKILL.md and ../references/condition-shapes.md):
     }
 
 Optional fields: format ("jwt"), proof ("merkle"),
-solanaWallet, xrplWallet, bitcoinWallet.
+solanaWallet, xrplWallet, bitcoinWallet, tronWallet, stellarWallet, suiWallet.
 """
 import argparse
 import json

@@ -4,11 +4,11 @@ description: >
   InsumerAPI batch wallet trust profiles — same curated bundle as insumer-trust,
   but for up to 10 wallets in a single call (5-8x faster than sequential). Use
   when the user needs trust profiles for a list of wallets (airdrop eligibility,
-  allowlist scoring, batch pre-transaction checks). Each wallet's profile is
+  allowlist screening, batch pre-transaction checks). Each wallet's profile is
   independently signed; response supports partial success.
 allowed-tools: Bash
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   author: InsumerAPI
 ---
 
@@ -70,19 +70,23 @@ Top-level `proof: "merkle"` (optional) applies to all wallets in the batch and c
         "trust": {
           "id": "TRST-A1B2C",
           "wallet": "0xd8dA...",
-          "conditionSetVersion": "v1",
+          "conditionSetVersion": "v2",
           "dimensions": { ... },
-          "summary": { "totalChecks": 44, "totalPassed": 6, "totalFailed": 32, "totalNotEvaluated": 6, ... },
+          "summary": { "totalChecks": 45, "totalPassed": 6, "totalFailed": 33, "totalNotEvaluated": 6, ... },
           "profiledAt": "2026-...",
           "expiresAt": "2026-..."
         },
         "sig": "...",
-        "kid": "insumer-trust-v2"
+        "kid": "insumer-trust-v2",
+        "pqSig": "...",
+        "pqKid": "insumer-trust-pq1"
       },
       {
         "trust": { "id": "TRST-D4E5F", "wallet": "0xAb58...", ... },
         "sig": "...",
-        "kid": "insumer-trust-v2"
+        "kid": "insumer-trust-v2",
+        "pqSig": "...",
+        "pqKid": "insumer-trust-pq1"
       }
     ],
     "summary": { "requested": 2, "succeeded": 2, "failed": 0 }
@@ -94,7 +98,7 @@ Top-level `proof: "merkle"` (optional) applies to all wallets in the batch and c
 }
 ```
 
-Each entry in `data.results[]` is **either** a `{trust, sig, kid}` object **or** `{error: { wallet, message }}`. Iterate, branch, and verify each `trust` independently with `insumer-jwks-verify`.
+Each entry in `data.results[]` is **either** a `{trust, sig, kid, pqSig, pqKid}` object **or** `{error: { wallet, message }}`. Iterate, branch, and verify each `trust` independently with `insumer-jwks-verify`.
 
 ## Usage
 
@@ -188,9 +192,8 @@ For per-wallet cross-chain coverage, edit the script's `--wallets-file` to use J
 | `401` | Missing/invalid API key | See `insumer-auth` |
 | `402` | Insufficient credits for entire batch | Top up via Path 4 in `insumer-auth` |
 | `429` | Rate limit exceeded | Slow down; check tier limits |
-| `503` | Upstream blockchain data source unavailable | Retryable; no credits charged for failed batches |
 
-Within a `200` response, individual wallet failures appear as `{error: {wallet, message}}` entries in `data.results[]` — those don't consume credits.
+The batch endpoint does not answer `503` for an upstream data-source failure. A wallet whose chain reads fail is refused on its own: it appears as an `{error: {wallet, message}}` entry in `data.results[]` of a `200` response, is never signed, and does not consume credits. Retry those wallets later.
 
 ## Related skills
 

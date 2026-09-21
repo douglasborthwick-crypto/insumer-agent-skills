@@ -8,7 +8,7 @@ description: >
   the raw sig path (ES256 over the canonical attestation/trust object).
 allowed-tools: Bash
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   author: InsumerAPI
 ---
 
@@ -28,16 +28,16 @@ InsumerAPI signs every `/v1/attest`, `/v1/trust`, and `/v1/trust/batch` response
 
 ## Two verification paths
 
-InsumerAPI returns **two** verifiable forms in every signed response:
+InsumerAPI returns up to **two** verifiable forms in a signed response:
 
-1. **`sig` field**: base64 P1363 ES256 signature over the preimage the `kid` selects (see "What's signed" in `references/jwks-format.md`): for `insumer-attest-v2`, the domain tag `insumer.attestation.v2` + newline + recursively sorted canonical JSON of `{v:2, id, pass, results, attestedAt}`; for `insumer-attest-v1`, the bare insertion-order `JSON.stringify({id, pass, results, attestedAt})`; for trust profiles, the trust domain tag + canonical JSON of the whole trust object. Verify with any ES256 library + the JWKS key the `kid` names. Every response also carries `pqSig`/`pqKid`, an ML-DSA-65 companion over the same preimage under a post-quantum domain tag (spec Check 6).
-2. **`jwt` field** *(only when `"format": "jwt"` is in the request body)* — standard ES256 JWT with the same payload as standard JWT claims. Verify with any standard JWT library pointed at the JWKS URL.
+1. **`sig` field** (every response): base64 P1363 ES256 signature over the preimage the `kid` selects (see "What's signed" in `references/jwks-format.md`). Attestations: for `insumer-attest-v2`, the domain tag `insumer.attestation.v2` + newline + canonical JSON (keys sorted recursively, no whitespace) of `{v:2, id, pass, results, attestedAt}`; for `insumer-attest-v1`, `JSON.stringify({id, pass, results, attestedAt})` in that insertion order. Trust profiles: for `insumer-trust-v2`, the domain tag `insumer.trust.v2` + newline + canonical JSON of the whole `trust` object; for `insumer-attest-v1`, `JSON.stringify(trust)` as issued. Verify with any ES256 library + the JWKS key the `kid` names. Every response also carries `pqSig`/`pqKid`, an ML-DSA-65 companion over the same preimage under a post-quantum domain tag (spec Check 6).
+2. **`jwt` field** *(`/v1/attest` only, and only when `"format": "jwt"` is in the request body; `/v1/trust` and `/v1/trust/batch` have no JWT form)* — standard ES256 JWT carrying the attestation as claims, with a sibling `pqJwt` companion. Verify with any standard JWT library pointed at the JWKS URL.
 
 The `jwt` path is easier when the consumer is already using a JWT library; the `sig` path is more compact and avoids JWT envelope overhead. Both produce the same security guarantees.
 
 ## Recipe 1: JWT verification (Node.js, `jose`)
 
-Add `"format": "jwt"` to the `/v1/attest` or `/v1/trust` request body, then:
+Add `"format": "jwt"` to the `/v1/attest` request body (trust profiles have no JWT form; use Recipe 3), then:
 
 ```javascript
 import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -82,56 +82,10 @@ def verify_attestation(jwt_string: str) -> dict:
 
 ## Recipe 3: Raw `sig` verification (Node.js)
 
-When the response was returned without `format: "jwt"`:
+For any response's `sig` (every trust profile, and attestations without `format: "jwt"`). Pass `response.data` for `/v1/attest` and `/v1/trust`, or one entry of `data.results[]` for `/v1/trust/batch`, exactly as parsed from the wire; never rebuild or re-order the signed object, because the v1 scheme signs insertion-order `JSON.stringify` output.
 
 ```javascript
-import { importJWK, compactVerify, calculateJwkThumbprint } from 'jose';
-
-async function verifyRawSig(response) {
-  // 1. Fetch the JWKS once and cache it
-  const jwksRes = await fetch('https://insumermodel.com/.well-known/jwks.json');
-  const { keys } = await jwksRes.json();
-  const jwk = keys.find(k => k.kid === response.kid);
-  if (!jwk) throw new Error(`unknown kid ${response.kid}`);
-  const publicKey = await importJWK(jwk, 'ES256');
-
-  // 2. Recompute canonical payload bytes (sorted-key JSON of attestation/trust)
-  const canonical = JSON.stringify(response.attestation, Object.keys(response.attestation).sort());
-
-  // 3. Verify the base64 P1363 signature
-  // (use insumer-verify npm package for the canonical signing scheme)
-  // ...
-}
-```
-
-For raw sig verification, the official package is **`insumer-verify`** on npm:
-
-```bash
-npm install insumer-verify
-```
-
-```javascript
-import { verifyAttestation } from 'insumer-verify';
-
-// Pass the full response envelope. The result is an object, never a bare boolean.
-const result = await verifyAttestation(response, {
-  jwksUrl: 'https://insumermodel.com/.well-known/jwks.json',
-});
-// result.valid is the AND of the checks; result.checks reports each one separately:
-// signature, conditionHash, freshness, expiry, and pq (the post-quantum companion:
-// verified | refuted | absent | unverifiable). Unknown kid fails closed.
-if (!result.valid) throw new Error('attestation rejected: ' + JSON.stringify(result.checks));
-```
-
-## Recipe 4: Conditional verification + tamper detection
-
-Beyond signature verification, you can independently re-derive the `conditionHash` to confirm the condition wasn't tampered with:
-
-```javascript
-import { createHash } from 'node:crypto';
-
-// conditionHash = "0x" + SHA-256 over the canonical JSON of evaluatedCondition:
-// keys sorted recursively at every level (RFC 8785 style), no whitespace.
+// Canonical JSON: keys sorted recursively at every level, no whitespace.
 function canonicalize(value) {
   if (Array.isArray(value)) return '[' + value.map(canonicalize).join(',') + ']';
   if (value && typeof value === 'object') {
@@ -141,18 +95,101 @@ function canonicalize(value) {
   return JSON.stringify(value);
 }
 
-function recomputeConditionHash(evaluatedCondition) {
-  return '0x' + createHash('sha256').update(canonicalize(evaluatedCondition)).digest('hex');
+// The exact bytes the ES256 signature covers, selected by kid.
+function signedPreimage(data) {
+  const { kid } = data;
+  if (data.attestation) {
+    const { id, pass, results, attestedAt } = data.attestation;
+    if (kid === 'insumer-attest-v2') {
+      return 'insumer.attestation.v2\n' + canonicalize({ v: 2, id, pass, results, attestedAt });
+    }
+    if (kid === 'insumer-attest-v1') return JSON.stringify({ id, pass, results, attestedAt });
+  } else if (data.trust) {
+    if (kid === 'insumer-trust-v2') return 'insumer.trust.v2\n' + canonicalize(data.trust);
+    if (kid === 'insumer-attest-v1') return JSON.stringify(data.trust);
+  }
+  throw new Error(`kid ${kid} does not sign this artifact`); // fail closed
 }
 
-// After signature verification, re-derive and compare
-const recomputed = recomputeConditionHash(payload.evaluatedCondition);
-if (recomputed !== payload.conditionHash) {
-  throw new Error('conditionHash mismatch — payload may have been tampered with');
+async function verifyRawSig(data, jwks) {
+  const jwk = jwks.keys.find((k) => k.kty === 'EC' && k.kid === data.kid);
+  if (!jwk) throw new Error(`unknown kid ${data.kid}`); // fail closed
+  const key = await crypto.subtle.importKey(
+    'jwk', { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y },
+    { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+  // Web Crypto takes the 64-byte P1363 (r || s) signature as is.
+  return crypto.subtle.verify(
+    { name: 'ECDSA', hash: 'SHA-256' }, key,
+    Buffer.from(data.sig, 'base64'),
+    new TextEncoder().encode(signedPreimage(data)));
 }
 ```
 
-This is belt-and-suspenders — the signature already covers `conditionHash` — but it lets a verifier confirm the *exact condition logic* that was evaluated, not just that the result was signed.
+This checks the ES256 signature only. It does not check condition hashes, expiry, or the post-quantum companion. For all of those, use the official package, **`insumer-verify`** on npm (ES module; import it, do not `require` it):
+
+```bash
+npm install insumer-verify
+```
+
+```javascript
+import { verifyAttestation, verifyTrustProfile } from 'insumer-verify';
+
+const opts = { jwksUrl: 'https://insumermodel.com/.well-known/jwks.json' };
+
+// /v1/attest: pass the full response ({ ok, data: { attestation, sig, kid, pqSig, pqKid, ... } }).
+const result = await verifyAttestation(response, opts);
+// result.valid is the AND of the checks; result.checks reports each one separately:
+// checks.signature, checks.conditionHashes, checks.freshness, checks.expiry, and
+// checks.pq (the post-quantum companion: status verified | refuted | absent | unverifiable).
+// For a whole format:"jwt" response (data.jwt beside data.attestation) there is also
+// checks.jwt, which verifies the tokens and binds them to the attestation.
+if (!result.valid) throw new Error('attestation rejected: ' + JSON.stringify(result.checks));
+
+// /v1/trust: pass the full response; for /v1/trust/batch, call once per data.results[i].
+const trust = await verifyTrustProfile(trustResponse, opts);
+// trust.checks: signature, freshness, expiry, pq. Render trust.trust (the verified object), gated on trust.valid.
+if (!trust.valid) throw new Error('trust profile rejected: ' + JSON.stringify(trust.checks));
+```
+
+## Recipe 4: Conditional verification + tamper detection
+
+Beyond signature verification, you can independently re-derive the `conditionHash` to confirm the condition wasn't tampered with:
+
+```javascript
+import { createHash } from 'node:crypto';
+
+// conditionHash = "0x" + SHA-256 over evaluatedCondition, serialized per the kid:
+// v2 kids: canonical JSON, keys sorted recursively at every level, no whitespace.
+// insumer-attest-v1: JSON.stringify with the sorted top-level keys as the replacer.
+function canonicalize(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonicalize).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort()
+      .map((k) => JSON.stringify(k) + ':' + canonicalize(value[k])).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+function recomputeConditionHash(evaluatedCondition, kid) {
+  const bytes = kid === 'insumer-attest-v1'
+    ? JSON.stringify(evaluatedCondition, Object.keys(evaluatedCondition).sort())
+    : canonicalize(evaluatedCondition);
+  return '0x' + createHash('sha256').update(bytes).digest('hex');
+}
+
+// After signature verification (Recipe 1), re-derive and compare every condition.
+// In the JWT payload, conditionHash is an array (one entry per condition) and each
+// evaluatedCondition lives in results[i]. kid is the JWT header's kid
+// (jwtVerify returns it as protectedHeader.kid).
+payload.results.forEach((r, i) => {
+  const recomputed = recomputeConditionHash(r.evaluatedCondition, kid);
+  if (recomputed !== r.conditionHash || recomputed !== payload.conditionHash[i]) {
+    throw new Error(`conditionHash mismatch on condition ${i}: payload may have been tampered with`);
+  }
+});
+```
+
+For the raw form, the same loop runs over `data.attestation.results` with `data.kid`.
 
 ## Code emission rules
 
@@ -164,7 +201,7 @@ This is belt-and-suspenders — the signature already covers `conditionHash` —
 
 ## Helper script
 
-`scripts/verify.py` — Python helper that takes a JWT or raw response on stdin and verifies it against the public JWKS. Prints `OK` + payload, or `INVALID` + reason.
+`scripts/verify.py` — Python helper that takes a JWT, or a response object carrying `jwt` (from `/v1/attest` with `format: "jwt"`), on stdin and verifies the JWT against the public JWKS. Prints `OK` + payload, or `INVALID` + reason. It does not verify raw `sig` responses (every trust profile, and attestations without `format: "jwt"`); use Recipe 3 or `insumer-verify` for those.
 
 ```bash
 echo '{"jwt":"eyJhbG...","kid":"insumer-attest-v2"}' | python scripts/verify.py

@@ -64,7 +64,7 @@ Five entries over two keys: the three `EC` entries share one P-256 key and are s
 | `pub` | base64url | ML-DSA-65 public key (AKP entries only) |
 | `kid` | `"insumer-attest-v1"`, `"insumer-attest-v2"`, `"insumer-trust-v2"` (EC); `"insumer-attest-pq1"`, `"insumer-trust-pq1"` (AKP) | Key identifier. The three EC kids resolve to the same key; the two AKP kids resolve to the same post-quantum key. Match the `kid` (or `pqKid`) on the response you are verifying, and fail closed if it does not resolve. |
 
-The endpoint is cached for 24 hours at the edge (`Cache-Control: public, max-age=86400`) and never requires authentication.
+The JWKS never requires authentication. Caching differs by URL; as observed on 2026-09-21, `https://insumermodel.com/.well-known/jwks.json` answered `Cache-Control: public, max-age=0, must-revalidate`, the `api.insumermodel.com/.well-known/jwks.json` mirror `max-age=14400` (4 hours), and `GET https://api.insumermodel.com/v1/jwks` `max-age=86400` (24 hours). Read the headers you actually receive rather than assuming a TTL, and treat an unknown kid as a reason to refetch, then fail closed.
 
 ## What's signed
 
@@ -82,7 +82,7 @@ For `/v1/trust` and `/v1/trust/batch`, selected by `kid`:
 
 ## JWT claim mapping
 
-When `format: "jwt"` is requested, the response includes a `data.jwt` field with these claims:
+`format: "jwt"` is available on `POST /v1/attest` only; `/v1/trust` and `/v1/trust/batch` return the raw `sig` form alone. When it is requested, the response includes a `data.jwt` field (and a sibling `data.pqJwt`, the post-quantum companion over the same claim set) with these claims:
 
 | Claim | Source | Meaning |
 |---|---|---|
@@ -90,17 +90,19 @@ When `format: "jwt"` is requested, the response includes a `data.jwt` field with
 | `sub` | wallet address | Subject |
 | `jti` | unique attestation ID | JWT ID — useful for replay defense |
 | `iat` | unix timestamp | Issued at |
-| `exp` | iat + 30 min | Expiration |
+| `exp` | iat + 30 min (+5 min when the request carries an `erc7710_delegation` condition) | Expiration, equal to the attestation's `expiresAt` |
 | `pass` | boolean | Overall verification result |
-| `results` | array | Per-condition booleans (attest only) |
-| `dimensions` | object | Per-dimension results (trust only) |
+| `results` | array | The attestation's `results`, unchanged: per-condition `met`, `evaluatedCondition`, `conditionHash`, and chain anchor |
 | `conditionHash` | array of hex strings | SHA-256 of each condition's canonical evaluatedCondition. Top-level JWT payload aggregates one entry per condition (1-element array for single-condition requests). The per-result `conditionHash` inside `results[].conditionHash` is a single string. |
-| `blockNumber` | hex string | Block number on EVM, slot on Solana, ledgerIndex on XRPL |
-| `blockTimestamp` | ISO 8601 | Block timestamp |
+| `blockNumber` | hex string | The first result's EVM block number; absent when the first result carries none (non-EVM chains anchor in `results[i]` with `slot`, `ledgerIndex`, `blockHeight` or `checkpointSequence`) |
+| `blockTimestamp` | ISO 8601 | The first result's block timestamp, when it has one |
 
 ## conditionHash recomputation
 
-The `conditionHash` is `sha256(canonical_json(evaluatedCondition))` with sorted keys, prefixed with `0x`. Verifiers can independently recompute it from `data.attestation.evaluatedCondition` to confirm exactly what condition logic was evaluated:
+Each result's `conditionHash` is `0x` + SHA-256 of its `evaluatedCondition`, serialized per the scheme the `kid` selects. Verifiers can recompute it from `data.attestation.results[i].evaluatedCondition` (in JWT form, `results[i].evaluatedCondition`, compared with `results[i].conditionHash` and `conditionHash[i]`) to confirm exactly what condition logic was evaluated:
+
+- `insumer-attest-v2` / `insumer-trust-v2`: canonical JSON, keys sorted recursively at every level, no whitespace. The function below.
+- `insumer-attest-v1`: `JSON.stringify(evaluatedCondition, Object.keys(evaluatedCondition).sort())`, the top-level keys sorted and used as the replacer list. Byte-identical to the canonical form for a flat condition.
 
 ```python
 import json
@@ -111,6 +113,7 @@ def recompute_condition_hash(evaluated_condition: dict) -> str:
         evaluated_condition,
         separators=(",", ":"),  # no whitespace
         sort_keys=True,
+        ensure_ascii=False,     # match JavaScript's JSON.stringify
     )
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return "0x" + digest

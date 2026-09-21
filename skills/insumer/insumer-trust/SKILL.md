@@ -2,39 +2,41 @@
 name: insumer-trust
 description: >
   InsumerAPI wallet trust profile — curated multi-dimensional condition-based
-  access bundle for a single wallet. 44 base checks across 5 dimensions
-  (stablecoins, governance, NFTs, staking, institutional stablecoins), plus
-  optional Solana, XRPL, Bitcoin and Tron dimensions. Use when the user wants a pre-built
+  access bundle for a single wallet. 45 base checks across 26 chains in 5
+  dimensions (stablecoins, governance, NFTs, staking, institutional
+  stablecoins), plus optional Solana, XRPL, Bitcoin and Tron dimensions (up to
+  50 checks across 28 chains in 9 dimensions). Use when the user wants a pre-built
   wallet snapshot rather than specifying conditions one-by-one — e.g.
   pre-transaction trust check, KYC-of-state, "tell me what this wallet holds
   across chains." The profile is signed once, as a whole. Carry it unchanged:
   never re-sign or wrap it.
 allowed-tools: Bash
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   author: InsumerAPI
 ---
 
 # InsumerAPI Wallet Trust Profile
 
-A curated condition bundle for a single wallet. Same primitive as `insumer-attest` (read → evaluate → sign), but the conditions are pre-defined — 44 base checks across 5 dimensions, with optional cross-chain extensions. **Boolean, not balance, on every check.**
+A curated condition bundle for a single wallet. Same primitive as `insumer-attest` (read → evaluate → sign), but the conditions are pre-defined — 45 base checks across 26 chains in 5 dimensions, with optional cross-chain extensions. **Boolean, not balance, on every check.**
 
 Pick this skill when the developer wants a snapshot. Pick `insumer-attest` when they want to specify their own conditions.
 
 ## What you get
 
-- **44 base checks** across **5 dimensions**:
-  - **Stablecoins** — USDC and USDT balances on each major EVM chain
-  - **Governance** — major governance token holdings
-  - **NFTs** — collection holdings
-  - **Staking** — staked balances on major staking protocols
-  - **Institutional stablecoins** — EURCV, USDCV, USDC, and BENJI across Ethereum, Solana, XRPL, Stellar, and Sui
+- **45 base checks** across **26 chains** in **5 dimensions**:
+  - **Stablecoins** (27) — USDC and USDT balances across 22 EVM chains, including USDC on Arc
+  - **Governance** (4) — UNI and AAVE on Ethereum, ARB on Arbitrum, OP on Optimism
+  - **NFTs** (3) — BAYC, Pudgy Penguins, Wrapped CryptoPunks
+  - **Staking** (3) — stETH, rETH, cbETH
+  - **Institutional stablecoins** (8) — EURCV, USDCV, USDC, and BENJI across Ethereum, Solana, XRPL, Stellar, and Sui. Always present; the Solana, XRPL, Stellar and Sui entries are evaluated only when the matching wallet is supplied, and are otherwise marked `evaluated: false`
 - **Optional extensions** (when extra wallet addresses are provided):
   - **Solana USDC** — pass `solanaWallet`
   - **XRPL stablecoins** — pass `xrplWallet` (RLUSD + USDC checks)
   - **Bitcoin holdings** — pass `bitcoinWallet` (native BTC balance)
   - **Tron USDT** — pass `tronWallet` (USDT-TRC20)
-- Up to 49 total checks across 27 chains when all extensions are included
+  - **Stellar / Sui** — pass `stellarWallet` / `suiWallet`. These add no checks and no dimension; they let the Stellar and Sui entries in institutional stablecoins be evaluated
+- Up to 50 total checks across 28 chains in 9 dimensions when all extensions are included
 - Each check returns its own boolean; the response includes per-dimension and overall summaries
 - 3 credits standard, 6 credits with `proof: "merkle"`
 
@@ -52,7 +54,7 @@ export INSUMER_API_KEY='insr_live_...'
 
 - **Endpoint**: `POST https://api.insumermodel.com/v1/trust`
 - **Cost**: 3 credits standard, 6 credits with `proof: "merkle"`
-- **Wallet pattern**: `wallet` is required (EVM, `0x` + 40 hex chars). Solana / XRPL / Bitcoin wallets are optional add-ons.
+- **Wallet pattern**: `wallet` is required (EVM, `0x` + 40 hex chars). `solanaWallet`, `xrplWallet`, `bitcoinWallet`, `tronWallet`, `stellarWallet` (G-address) and `suiWallet` (`0x` + 64 hex chars) are optional add-ons.
 - **Trust profile ID format**: `TRST-XXXXX` (returned in `data.trust.id`)
 
 ## Usage
@@ -79,13 +81,13 @@ Response shape (abbreviated):
       "wallet": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
       "conditionSetVersion": "v2",
       "dimensions": {
-        "stablecoins":               { "checks": [...], "passCount": 3, "failCount": 23, "total": 26 },
-        "governance":                { "checks": [...], "passCount": 2, "failCount": 2,  "total": 4 },
-        "nfts":                      { "checks": [...], "passCount": 0, "failCount": 3,  "total": 3 },
-        "staking":                   { "checks": [...], "passCount": 1, "failCount": 2,  "total": 3 },
+        "stablecoins":               { "checks": [...], "passCount": 3, "failCount": 24, "notEvaluatedCount": 0, "total": 27 },
+        "governance":                { "checks": [...], "passCount": 2, "failCount": 2,  "notEvaluatedCount": 0, "total": 4 },
+        "nfts":                      { "checks": [...], "passCount": 0, "failCount": 3,  "notEvaluatedCount": 0, "total": 3 },
+        "staking":                   { "checks": [...], "passCount": 1, "failCount": 2,  "notEvaluatedCount": 0, "total": 3 },
         "institutional_stablecoins": { "checks": [...], "passCount": 0, "failCount": 2,  "notEvaluatedCount": 6, "total": 8 }
       },
-      "summary": { "totalChecks": 44, "totalPassed": 6, "totalFailed": 32, "totalNotEvaluated": 6, "dimensionsWithActivity": 3, "dimensionsChecked": 5 },
+      "summary": { "totalChecks": 45, "totalPassed": 6, "totalFailed": 33, "totalNotEvaluated": 6, "dimensionsWithActivity": 3, "dimensionsChecked": 5 },
       "profiledAt": "...",
       "expiresAt": "..."
     },
@@ -127,7 +129,7 @@ curl -X POST https://api.insumermodel.com/v1/trust \
   }'
 ```
 
-Each provided wallet adds its dimension to the response.
+Each provided Solana, XRPL, Bitcoin or Tron wallet adds its dimension to the response. A Stellar or Sui wallet (`stellarWallet`, `suiWallet`) adds no dimension; it lets the matching institutional-stablecoin entries be evaluated instead of marked `evaluated: false`.
 
 ### Example 4: Merkle proofs (advanced)
 
@@ -166,7 +168,7 @@ For multiple wallets in one call, use `insumer-trust-batch`.
 
 ## Helper script
 
-`scripts/trust.py` — Python helper that wraps `POST /v1/trust`. Reads `INSUMER_API_KEY` from env, accepts `--wallet`, `--solana`, `--xrpl`, `--bitcoin`, `--proof merkle`.
+`scripts/trust.py` — Python helper that wraps `POST /v1/trust`. Reads `INSUMER_API_KEY` from env, accepts `--wallet`, `--solana`, `--xrpl`, `--bitcoin`, `--tron`, `--stellar`, `--sui`, `--proof merkle`.
 
 ```bash
 python scripts/trust.py --wallet 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045

@@ -7,6 +7,7 @@ Reads INSUMER_API_KEY from env. Returns the curated multi-dimensional profile.
 Usage:
     python trust.py --wallet 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
     python trust.py --wallet 0x... --solana 5xY... --xrpl rN7n... --bitcoin bc1q...
+    python trust.py --wallet 0x... --tron T... --stellar G... --sui 0x...
     python trust.py --wallet 0x... --proof merkle
 """
 import argparse
@@ -25,6 +26,9 @@ def main() -> int:
     parser.add_argument("--solana", help="Optional Solana wallet (base58)")
     parser.add_argument("--xrpl", help="Optional XRPL wallet (r-address)")
     parser.add_argument("--bitcoin", help="Optional Bitcoin address")
+    parser.add_argument("--tron", help="Optional Tron wallet (T-address)")
+    parser.add_argument("--stellar", help="Optional Stellar wallet (G-address; adds no checks, evaluates the Stellar institutional entries)")
+    parser.add_argument("--sui", help="Optional Sui wallet (0x + 64 hex chars; adds no checks, evaluates the Sui institutional entry)")
     parser.add_argument("--proof", choices=["merkle"], help="Set 'merkle' for EIP-1186 proofs (6 credits)")
     args = parser.parse_args()
 
@@ -40,6 +44,12 @@ def main() -> int:
         body_dict["xrplWallet"] = args.xrpl
     if args.bitcoin:
         body_dict["bitcoinWallet"] = args.bitcoin
+    if args.tron:
+        body_dict["tronWallet"] = args.tron
+    if args.stellar:
+        body_dict["stellarWallet"] = args.stellar
+    if args.sui:
+        body_dict["suiWallet"] = args.sui
     if args.proof:
         body_dict["proof"] = args.proof
 

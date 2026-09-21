@@ -10,7 +10,7 @@ description: >
   Read → evaluate → sign, in one call.
 allowed-tools: Bash
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   author: InsumerAPI
 ---
 
@@ -186,7 +186,7 @@ When emitting integration code that calls `/v1/attest`, the agent MUST:
 
 ## Helper script
 
-`scripts/attest.py` — Python helper that wraps `POST /v1/attest`. Reads `INSUMER_API_KEY` from env, accepts a JSON conditions payload on stdin or via `--conditions-file`, prints the signed response.
+`scripts/attest.py` — Python helper that wraps `POST /v1/attest`. Reads `INSUMER_API_KEY` from env, accepts the full JSON request body (wallet + conditions) on stdin or via `--body-file`, prints the signed response.
 
 ```bash
 echo '{"wallet":"0x...","conditions":[{"type":"token_balance",...}]}' | python scripts/attest.py
