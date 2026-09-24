@@ -37,7 +37,7 @@ Wallet auth is the OAuth-equivalent for what a wallet holds. The pattern is **re
 - Nine condition types: `token_balance`, `nft_ownership` (33 of 37 chains: EVM + Solana + XRPL), `eas_attestation` (Ethereum, Optimism, Polygon, Base, Arbitrum), `farcaster_id`, `evm_view_call` (single-address-argument view function returning bool; `selector` required, EVM chains only), `ratio_to_amount`, `ratio_to_supply`, `erc8004_agent` (Base; `agentId` required), `erc7710_delegation` (Base; `delegationManager`, `expectedDelegator`, `delegation` required; max 3 per call, 5-minute expiry)
 - ES256 signature on every response, with optional ES256 JWT (`format: "jwt"`) for standard JWT-library verification
 - Optional EIP-1186 Merkle storage proofs (`proof: "merkle"`) on token_balance conditions for 27 of the 31 EVM chains (not ZKsync Era, Sei, Viction or XDC Network, nor any non-EVM chain), plus revocation-slot proofs for erc7710_delegation on the verified v1.3.0 manager
-- 30-minute attestation TTL (`expiresAt` in response)
+- 30-minute attestation TTL, 5 minutes when the request includes an `erc7710_delegation` condition (`expiresAt` in response)
 
 ## Setup
 
@@ -54,7 +54,7 @@ export INSUMER_API_KEY='insr_live_...'
 - **Signing algorithm**: ES256 (ECDSA P-256)
 - **Key IDs (`kid`)**: three over the same P-256 key — `insumer-attest-v2` (attest, every key issued since 2026-06-10), `insumer-trust-v2` (trust), `insumer-attest-v1` (pre-cutover keys, and the commerce discount path). **Resolve the key by the `kid` on the response; never pin one and never take `keys[0]`.** The `kid` also selects the verification rules: v1 signs bare JSON, v2 signs a domain-separated canonical preimage.
 - **Auth header**: `X-API-Key: insr_live_...`
-- **Attestation TTL**: 30 minutes (`expiresAt` in response)
+- **Attestation TTL**: 30 minutes, or 5 when the request includes an `erc7710_delegation` condition (`expiresAt` in response)
 - **Signature format**: base64 P1363 (88 chars) on the `sig` field; ES256 JWT on the `jwt` field when `format: "jwt"` is requested
 
 ## Usage
@@ -181,7 +181,7 @@ When emitting integration code that calls `/v1/attest`, the agent MUST:
 3. **Do not send `decimals`.** It is optional. Leave it out: the token's own decimals are always read from the chain. If sent it is only a cross-check, and a value that differs from the token's own decimals is rejected with a `400`.
 3a. **Send the `token_balance` `threshold` as a decimal string** (`"100"`, not `100`). Keys created from 2026-06-10 sign with `kid: insumer-attest-v2` and reject a JSON number with a `400`; a string is accepted by both v1 and v2 keys.
 4. **Call from a backend, not a browser.** The API key is a backend credential.
-5. **Don't cache the verdict.** Cache the JWKS (the `jose` library's `createRemoteJWKSet` does this for you). Pass/fail expires in 30 minutes — wallet state changes.
+5. **Don't cache the verdict.** Cache the JWKS (the `jose` library's `createRemoteJWKSet` does this for you). Pass/fail expires at `expiresAt` (30 minutes, or 5 for an `erc7710_delegation` condition), and wallet state changes.
 6. **Don't request `proof: "merkle"` unless the caller needs the raw balance.** Standard mode is boolean-not-balance by construction; Merkle mode opts out of that privacy property.
 
 ## Helper script

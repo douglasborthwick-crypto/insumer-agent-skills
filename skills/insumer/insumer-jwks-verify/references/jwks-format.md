@@ -87,10 +87,10 @@ For `/v1/trust` and `/v1/trust/batch`, selected by `kid`:
 | Claim | Source | Meaning |
 |---|---|---|
 | `iss` | `https://api.insumermodel.com` | Issuer |
-| `sub` | wallet address | Subject |
+| `sub` | wallet address | Subject: the wallet a condition in the request evaluated (with conditions across chain families, the first in the order EVM, Solana, XRPL, Bitcoin, Tron, Stellar, Sui) |
 | `jti` | unique attestation ID | JWT ID — useful for replay defense |
 | `iat` | unix timestamp | Issued at |
-| `exp` | iat + 30 min (+5 min when the request carries an `erc7710_delegation` condition) | Expiration, equal to the attestation's `expiresAt` |
+| `exp` | iat + 30 min, or iat + 5 min when the request carries an `erc7710_delegation` condition | Expiration, equal to the attestation's `expiresAt` |
 | `pass` | boolean | Overall verification result |
 | `results` | array | The attestation's `results`, unchanged: per-condition `met`, `evaluatedCondition`, `conditionHash`, and chain anchor |
 | `conditionHash` | array of hex strings | SHA-256 of each condition's canonical evaluatedCondition. Top-level JWT payload aggregates one entry per condition (1-element array for single-condition requests). The per-result `conditionHash` inside `results[].conditionHash` is a single string. |
