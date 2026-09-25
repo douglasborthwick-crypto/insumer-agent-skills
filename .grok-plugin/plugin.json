@@ -1,0 +1,13 @@
+{
+  "name": "insumer",
+  "version": "0.2.0",
+  "description": "InsumerAPI wallet auth: condition-based access for blockchain wallets. Get an API key, attest wallet conditions across 37 chains, pull signed wallet trust profiles, and verify every signed response offline against the public JWKS.",
+  "author": {
+    "name": "InsumerAPI",
+    "url": "https://insumermodel.com"
+  },
+  "homepage": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
+  "repository": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
+  "license": "MIT",
+  "keywords": ["insumer", "insumerapi", "wallet auth", "condition-based access"]
+}

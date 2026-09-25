@@ -25,11 +25,11 @@ OAuth proves who the user is. **Wallet auth proves what the wallet holds.** Insu
 
 | Skill | What it does | Version |
 | ----- | ------------ | ------- |
-| [insumer-auth](skills/insumer/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.2 |
-| [insumer-attest](skills/insumer/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.2 |
-| [insumer-trust](skills/insumer/insumer-trust/) | Curated wallet trust profile, 45 base checks across 26 chains (`/v1/trust`) | 0.1.2 |
-| [insumer-trust-batch](skills/insumer/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.2 |
-| [insumer-jwks-verify](skills/insumer/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.1.2 |
+| [insumer-auth](skills/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.2 |
+| [insumer-attest](skills/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.2 |
+| [insumer-trust](skills/insumer-trust/) | Curated wallet trust profile, 45 base checks across 26 chains (`/v1/trust`) | 0.1.2 |
+| [insumer-trust-batch](skills/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.2 |
+| [insumer-jwks-verify](skills/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.1.2 |
 
 ---
 
@@ -54,7 +54,7 @@ Each skill folder goes directly under `~/.claude/skills/` (one level deep; a nes
 ```bash
 git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
 mkdir -p ~/.claude/skills
-cp -r insumer-agent-skills/skills/insumer/insumer-* ~/.claude/skills/
+cp -r insumer-agent-skills/skills/insumer-* ~/.claude/skills/
 ```
 
 ### Option C: Manual (Grok Build)
@@ -64,7 +64,7 @@ Grok Build reads the same `SKILL.md` format from `~/.grok/skills/` (every projec
 ```bash
 git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
 mkdir -p ~/.grok/skills
-cp -r insumer-agent-skills/skills/insumer/insumer-* ~/.grok/skills/
+cp -r insumer-agent-skills/skills/insumer-* ~/.grok/skills/
 ```
 
 Restart your agent. The skills activate automatically when you ask anything that mentions wallet auth, token gating, condition-based access, on-chain eligibility, signed booleans, or JWKS verification.
@@ -115,6 +115,24 @@ Each skill encodes these as hard constraints, with reference shapes verified aga
 ## Compatible agents
 
 These skills work in any [agentskills.io](https://agentskills.io)-compatible agent. The current adopter list includes Claude, Claude Code, Cursor, GitHub Copilot, VS Code, OpenAI Codex, Google Gemini CLI, JetBrains Junie, Sourcegraph Amp, Block Goose, OpenHands, OpenCode, Letta, Roo Code, Mistral Vibe, ByteDance Trae, Snowflake Cortex, Databricks Genie, Spring AI, Kiro, Workshop, Qodo, Factory, Firebender, and others — see [agentskills.io/home](https://agentskills.io/home) for the live list. xAI's Grok Build reads the same `SKILL.md` format (see Option C above).
+
+---
+
+## Network endpoints and credentials
+
+The skills are instructions plus small helper scripts. There are no hooks, no MCP servers, and no install or postinstall steps. The scripts use the Python standard library, except `insumer-jwks-verify/scripts/verify.py`, which needs `pyjwt[crypto]` installed by you.
+
+| Script | Calls | Sends |
+| ------ | ----- | ----- |
+| `insumer-auth/scripts/create_key.py` | `POST https://api.insumermodel.com/v1/keys/create` | The email you pass; no key needed |
+| `insumer-auth/scripts/buy_key.py` | `POST https://api.insumermodel.com/v1/keys/buy` | The transaction hash of a payment you already made; no key needed |
+| `insumer-auth/scripts/buy_credits.py` | `POST https://api.insumermodel.com/v1/credits/buy` | `INSUMER_API_KEY` and the transaction hash of a payment you already made |
+| `insumer-attest/scripts/attest.py` | `POST https://api.insumermodel.com/v1/attest` | `INSUMER_API_KEY` and the request body you provide |
+| `insumer-trust/scripts/trust.py` | `POST https://api.insumermodel.com/v1/trust` | `INSUMER_API_KEY` and the wallet addresses you pass |
+| `insumer-trust-batch/scripts/trust_batch.py` | `POST https://api.insumermodel.com/v1/trust/batch` | `INSUMER_API_KEY` and the wallet addresses you pass |
+| `insumer-jwks-verify/scripts/verify.py` | `GET https://insumermodel.com/.well-known/jwks.json` | Nothing; it fetches the public keys and verifies locally |
+
+The only credential is `INSUMER_API_KEY`, read from the environment and sent only to `api.insumermodel.com` in the `X-API-Key` header. No script moves funds or holds a private key, and none reads any other environment variable or any file except a request or wallet list you name on the command line (`--body-file`, `--wallets-file`).
 
 ---
 
