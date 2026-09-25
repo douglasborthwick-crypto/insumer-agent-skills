@@ -9,5 +9,9 @@
   "homepage": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
   "repository": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
   "license": "MIT",
-  "keywords": ["insumer", "insumerapi", "wallet auth", "condition-based access"]
+  "keywords": [
+    "insumer",
+    "insumerapi",
+    "insumer api"
+  ]
 }
