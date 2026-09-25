@@ -3,8 +3,13 @@
 Buy an InsumerAPI key with USDC, USDT, or BTC (agent-onboarding path).
 
 Path 3 of 4 (see ../SKILL.md). No email required — sender wallet from the
-on-chain transaction becomes the key's identity. Send funds to the platform
-wallet first, then call this with the resulting transaction hash.
+on-chain transaction becomes the key's identity. This script never sends
+funds: make the payment with your own wallet, only after the user has approved
+the amount, token, chain and recipient, then call this with its transaction hash.
+
+It sends keyDelivery "apiKey" so the key string is returned. With the API's
+default ("wallet"), an EVM purchase returns no key: the paying wallet gets an
+Insumer Access pass and authenticates with Authorization: Wallet instead.
 
 Platform wallets:
   EVM:     0xAd982CB19aCCa2923Df8F687C0614a7700255a23
@@ -17,12 +22,11 @@ be recovered): USDC/USDT on Ethereum (1), Base (8453), Polygon (137),
 Arbitrum (42161), Optimism (10), BNB Chain (56), Avalanche (43114) or Solana;
 USDT-TRC20 on Tron; BTC on Bitcoin.
 
-Volume discounts: $5–$99 → $0.04/call, $100–$499 → $0.03/call (25% off),
-                  $500+ → $0.02/call (50% off).
+Volume discounts: $5–$99 → $0.04/credit, $100–$499 → $0.03/credit (25% off),
+                  $500+ → $0.02/credit (50% off).
 
-The appName is hard-coded to "insumer-agent-skills" for distribution-channel
-attribution. Override with --app-name only if you have a specific reason —
-otherwise leave it so origin funnel tracking works.
+appName defaults to "insumer-agent-skills", a label on the key that tells
+InsumerAPI which channel the key came from. Pass --app-name to use your own.
 
 Usage:
     python buy_key.py --tx 0xabc... --chain 8453 --amount 10
@@ -46,7 +50,7 @@ def main() -> int:
     parser.add_argument("--chain", required=True, help="Payment chain: 1, 8453, 137, 42161, 10, 56, 43114, 'solana', 'tron' or 'bitcoin'")
     parser.add_argument("--amount", type=float, help="Stablecoin amount sent (min 5). Optional for BTC.")
     parser.add_argument("--app-name", default=DEFAULT_APP_NAME,
-                        help=f"App name (default: {DEFAULT_APP_NAME!r}, for funnel tracking)")
+                        help=f"App name (default: {DEFAULT_APP_NAME!r})")
     args = parser.parse_args()
 
     chain = int(args.chain) if args.chain.isdigit() else args.chain
@@ -55,6 +59,7 @@ def main() -> int:
         "txHash": args.tx,
         "chainId": chain,
         "appName": args.app_name,
+        "keyDelivery": "apiKey",
     }
     if args.amount is not None:
         body_dict["amount"] = args.amount
@@ -87,7 +92,10 @@ def main() -> int:
     print(f"  Daily limit:    {data.get('dailyLimit')}")
     print(f"  Credits added:  {data.get('creditsAdded')}")
     print(f"  Total credits:  {data.get('totalCredits')}")
-    print(f"  USDC paid:      ${data.get('usdcPaid')} ({data.get('chainName')})")
+    if data.get("btcPaid") is not None:
+        print(f"  BTC paid:       {data.get('btcPaid')} BTC (${data.get('usdEquivalent')})")
+    else:
+        print(f"  Paid:           ${data.get('usdcPaid')} ({data.get('chainName')})")
     print(f"  Effective rate: {data.get('effectiveRate')}")
     print(f"\nStore this key securely (shown only once):\n")
     print(f"    export INSUMER_API_KEY='{key}'\n")

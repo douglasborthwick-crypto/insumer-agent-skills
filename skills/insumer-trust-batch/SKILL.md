@@ -1,20 +1,19 @@
 ---
 name: insumer-trust-batch
 description: >
-  InsumerAPI batch wallet trust profiles — same curated bundle as insumer-trust,
-  but for up to 10 wallets in a single call (5-8x faster than sequential). Use
-  when the user needs trust profiles for a list of wallets (airdrop eligibility,
-  allowlist screening, batch pre-transaction checks). Each wallet's profile is
-  independently signed; response supports partial success.
-allowed-tools: Bash
+  InsumerAPI batch wallet trust profiles: the same curated bundle as
+  insumer-trust, for up to 10 wallets in a single call. Use when the user wants
+  InsumerAPI trust profiles for a list of wallets (for example screening an
+  airdrop or allowlist with InsumerAPI). Each wallet's profile is independently
+  signed; the response supports partial success.
 metadata:
-  version: "0.1.2"
+  version: "0.2.0"
   author: InsumerAPI
 ---
 
 # InsumerAPI Batch Wallet Trust Profile
 
-Same curated condition-based access bundle as `insumer-trust`, but accepts up to **10 wallets** in one request (5-8x faster than sequential calls). Each wallet's profile is independently signed; the response supports partial success — failures for one wallet don't fail the rest.
+Same curated condition-based access bundle as `insumer-trust`, but accepts up to **10 wallets** in one request. Each wallet's profile is independently signed; the response supports partial success — failures for one wallet don't fail the rest.
 
 Each wallet's profile is signed once, as a whole, by InsumerAPI (`kid: insumer-trust-v2`, with the post-quantum companion). There are no per-dimension signatures and no signature over the batch. **Do not add an orchestrator wrap:** carry each signed profile exactly as issued.
 

@@ -25,11 +25,11 @@ OAuth proves who the user is. **Wallet auth proves what the wallet holds.** Insu
 
 | Skill | What it does | Version |
 | ----- | ------------ | ------- |
-| [insumer-auth](skills/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.1.2 |
-| [insumer-attest](skills/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.2 |
-| [insumer-trust](skills/insumer-trust/) | Curated wallet trust profile, 45 base checks across 26 chains (`/v1/trust`) | 0.1.2 |
-| [insumer-trust-batch](skills/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.2 |
-| [insumer-jwks-verify](skills/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.1.2 |
+| [insumer-auth](skills/insumer-auth/) | Free API key creation, env var setup, credit balance | 0.2.0 |
+| [insumer-attest](skills/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.2.0 |
+| [insumer-trust](skills/insumer-trust/) | Curated wallet trust profile, 45 base checks across 26 chains (`/v1/trust`) | 0.2.0 |
+| [insumer-trust-batch](skills/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.2.0 |
+| [insumer-jwks-verify](skills/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.2.0 |
 
 ---
 
@@ -73,7 +73,7 @@ Restart your agent. The skills activate automatically when you ask anything that
 
 ## First use (60 seconds)
 
-1. **Get a free API key** (10 starter credits + 100 `/v1/attest` calls per day, no signup):
+1. **Get a free API key** (10 free verifications plus 100 reads/day, no signup beyond an email):
 
    ```bash
    curl -s -X POST https://api.insumermodel.com/v1/keys/create \
@@ -124,15 +124,19 @@ The skills are instructions plus small helper scripts. There are no hooks, no MC
 
 | Script | Calls | Sends |
 | ------ | ----- | ----- |
-| `insumer-auth/scripts/create_key.py` | `POST https://api.insumermodel.com/v1/keys/create` | The email you pass; no key needed |
-| `insumer-auth/scripts/buy_key.py` | `POST https://api.insumermodel.com/v1/keys/buy` | The transaction hash of a payment you already made; no key needed |
-| `insumer-auth/scripts/buy_credits.py` | `POST https://api.insumermodel.com/v1/credits/buy` | `INSUMER_API_KEY` and the transaction hash of a payment you already made |
+| `insumer-auth/scripts/create_key.py` | `POST https://api.insumermodel.com/v1/keys/create` | `email` (yours), `appName`, `tier: "free"`; no key needed |
+| `insumer-auth/scripts/buy_key.py` | `POST https://api.insumermodel.com/v1/keys/buy` | `txHash` and `chainId` of a payment you already made, optional `amount`, `appName`, `keyDelivery: "apiKey"`; no key needed |
+| `insumer-auth/scripts/buy_credits.py` | `POST https://api.insumermodel.com/v1/credits/buy` | `INSUMER_API_KEY`, plus `txHash` and `chainId` of a payment you already made, `amount`, optional `updateWallet` |
 | `insumer-attest/scripts/attest.py` | `POST https://api.insumermodel.com/v1/attest` | `INSUMER_API_KEY` and the request body you provide |
 | `insumer-trust/scripts/trust.py` | `POST https://api.insumermodel.com/v1/trust` | `INSUMER_API_KEY` and the wallet addresses you pass |
 | `insumer-trust-batch/scripts/trust_batch.py` | `POST https://api.insumermodel.com/v1/trust/batch` | `INSUMER_API_KEY` and the wallet addresses you pass |
 | `insumer-jwks-verify/scripts/verify.py` | `GET https://insumermodel.com/.well-known/jwks.json` | Nothing; it fetches the public keys and verifies locally |
 
-The only credential is `INSUMER_API_KEY`, read from the environment and sent only to `api.insumermodel.com` in the `X-API-Key` header. No script moves funds or holds a private key, and none reads any other environment variable or any file except a request or wallet list you name on the command line (`--body-file`, `--wallets-file`).
+The only credential is `INSUMER_API_KEY`, read from the environment and sent only to `api.insumermodel.com` in the `X-API-Key` header. No script signs or sends a transaction or holds a private key. None reads any other environment variable (beyond the standard proxy variables Python's HTTP client honors) or any file except a request or wallet list you pass on the command line (`--body-file`, `--wallets-file`) or on stdin.
+
+`create_key.py` and `buy_key.py` send `appName: "insumer-agent-skills"` by default, a label on the key that tells InsumerAPI which channel it came from. Pass `--app-name` to use your own; nothing else is collected.
+
+The skills also show `GET https://api.insumermodel.com/v1/credits` (balance check) as a `curl` example. The paid paths in `insumer-auth` (Path 3 and Path 4) begin with a crypto payment that the skill tells the agent never to make without the user's explicit approval of the amount, token, chain and recipient.
 
 ---
 

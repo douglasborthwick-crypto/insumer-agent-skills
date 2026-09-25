@@ -1,16 +1,15 @@
 ---
 name: insumer-attest
 description: >
-  Wallet auth via InsumerAPI — condition-based access with cryptographically
-  verifiable, ES256-signed, JWKS-verifiable boolean responses across 37 chains.
-  Use when the user needs a "verified yes or no" on whether a wallet satisfies
-  an on-chain condition (token balance, NFT ownership, EAS attestation,
-  Farcaster ID), wants to gate a feature by what a wallet holds, add token
-  gating, or compose a wallet_state signal in a multi-issuer trust envelope.
-  Read → evaluate → sign, in one call.
-allowed-tools: Bash
+  Wallet auth via InsumerAPI: condition-based access with ES256-signed,
+  JWKS-verifiable boolean responses (token balances across 37 chains, plus NFT
+  ownership, EAS attestations, Farcaster IDs and other condition types). Use
+  when the user wants InsumerAPI to give a "verified yes or no" on whether a
+  wallet satisfies an on-chain condition, to gate a feature by what a wallet
+  holds with InsumerAPI, or to compose an InsumerAPI wallet_state signal in a
+  multi-issuer trust envelope. Read, evaluate, sign, in one call.
 metadata:
-  version: "0.1.2"
+  version: "0.2.0"
   author: InsumerAPI
 ---
 

@@ -3,8 +3,9 @@
 Top up an existing InsumerAPI key with credits via on-chain payment.
 
 Path 4 of 4 (see ../SKILL.md). Preserves key, history, tier, and integrations
-— credits just increment. Send funds to the platform wallet first, then call
-this with the transaction hash. Sender must match the wallet registered to the
+— credits just increment. This script never sends funds: make the payment with
+your own wallet, only after the user has approved the amount, token, chain and
+recipient, then call this with its transaction hash. Sender must match the wallet registered to the
 key (or pass --update-wallet to replace it).
 
 Platform wallets:
@@ -18,8 +19,8 @@ be recovered): USDC/USDT on Ethereum (1), Base (8453), Polygon (137),
 Arbitrum (42161), Optimism (10), BNB Chain (56), Avalanche (43114) or Solana;
 USDT-TRC20 on Tron; BTC on Bitcoin.
 
-Volume discounts: $5–$99 → $0.04/call, $100–$499 → $0.03/call (25% off),
-                  $500+ → $0.02/call (50% off).
+Volume discounts: $5–$99 → $0.04/credit, $100–$499 → $0.03/credit (25% off),
+                  $500+ → $0.02/credit (50% off).
 
 Usage:
     python buy_credits.py --tx 0xabc... --chain 8453 --amount 10
@@ -85,7 +86,7 @@ def main() -> int:
     print(f"\nCredits topped up")
     print(f"  Credits added:  {data.get('creditsAdded')}")
     print(f"  Total credits:  {data.get('totalCredits')}")
-    print(f"  USDC paid:      ${data.get('usdcPaid')} ({data.get('chainName')})\n")
+    print(f"  Paid (USD):     ${data.get('usdcPaid')} ({data.get('chainName')})\n")
     return 0
 
 

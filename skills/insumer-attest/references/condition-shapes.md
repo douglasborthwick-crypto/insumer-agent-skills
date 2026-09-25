@@ -20,7 +20,7 @@ Threshold check on a fungible token balance.
 |---|---|---|
 | `contractAddress` | yes | Token contract (0x + 40 hex on EVM), or `"native"` for the chain's native coin. `"native"` is for `token_balance` and `ratio_to_amount` only. For XRPL: `"native"` for XRP, or the issuer r-address for trust lines. For Bitcoin: must be `"native"`. For Sui: always a coin type (`address::module::Name`); native SUI is `"0x2::sui::SUI"` and `"native"` is a `400`. |
 | `chainId` | yes | Numeric for EVM, `"solana"`/`"xrpl"`/`"bitcoin"`/`"tron"`/`"stellar"`/`"sui"` for non-EVM |
-| `threshold` | yes | Minimum balance in **human units**, as a **decimal string** (`"100"`, `"0.000001"` — not a JSON number). Keys signing with `kid: insumer-attest-v2` (created from 2026-06-10) reject a number with a `400`; a string is accepted by v1 and v2 alike. Must be `> 0` when `proof: "merkle"` (use `"0.000001"` for prove-any-balance). |
+| `threshold` | yes | Minimum balance in **human units**, as a **decimal string** (`"100"`, `"0.000001"` — not a JSON number). Keys signing with `kid: insumer-attest-v2` (created from 2026-06-10) reject a number with a `400`; a string is accepted by v1 and v2 alike. Must be `> 0` (use `"0.000001"` for prove-any-balance). |
 | `decimals` | optional | Cross-check only; leave it out. The token's own decimals are always read from the chain. If sent, a value that differs from the token's own decimals is rejected with a `400`. |
 | `currency` | XRPL only | Trust line currency code (e.g. `"RLUSD"`, `"USDC"`) |
 | `label` | recommended | Human-readable label (max 100 chars) |
@@ -89,8 +89,8 @@ Available templates (current list — fetch live from `GET https://api.insumermo
 | Field | Required | Notes |
 |---|---|---|
 | `template` | one-of | Compliance template name |
-| `schemaId` | one-of | Raw EAS schema ID (with `attester`, `indexer`, `chainId`) |
-| `attester` | with schemaId | Trusted attester address |
+| `schemaId` | one-of | Raw EAS schema ID (with `indexer` and `chainId`; `attester` optional) |
+| `attester` | optional | Trusted attester address |
 | `indexer` | with schemaId | EAS indexer contract address |
 | `chainId` | with schemaId | EAS is read on Ethereum (1), Optimism (10), Polygon (137), Base (8453) and Arbitrum (42161) only |
 

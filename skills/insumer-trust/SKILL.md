@@ -1,18 +1,16 @@
 ---
 name: insumer-trust
 description: >
-  InsumerAPI wallet trust profile — curated multi-dimensional condition-based
+  InsumerAPI wallet trust profile: a curated multi-dimensional condition-based
   access bundle for a single wallet. 45 base checks across 26 chains in 5
   dimensions (stablecoins, governance, NFTs, staking, institutional
   stablecoins), plus optional Solana, XRPL, Bitcoin and Tron dimensions (up to
-  50 checks across 28 chains in 9 dimensions). Use when the user wants a pre-built
-  wallet snapshot rather than specifying conditions one-by-one — e.g.
-  pre-transaction trust check, KYC-of-state, "tell me what this wallet holds
-  across chains." The profile is signed once, as a whole. Carry it unchanged:
+  50 checks across 28 chains in 9 dimensions). Use when the user wants an InsumerAPI
+  trust profile, a pre-built signed wallet snapshot rather than conditions
+  specified one by one (for example an InsumerAPI pre-transaction trust check). The profile is signed once, as a whole. Carry it unchanged:
   never re-sign or wrap it.
-allowed-tools: Bash
 metadata:
-  version: "0.1.2"
+  version: "0.2.0"
   author: InsumerAPI
 ---
 
@@ -143,7 +141,7 @@ curl -X POST https://api.insumermodel.com/v1/trust \
   }'
 ```
 
-EIP-1186 Merkle storage proofs on stablecoin and governance checks. **Costs 6 credits** instead of 3, and reveals raw on-chain balances. Only opt in if the consumer explicitly needs the raw balances.
+EIP-1186 proofs on every EVM token check (stablecoins, governance, staking, and the EVM institutional rows) where the chain supports proofs; none for NFTs or non-EVM chains. **Costs 6 credits** instead of 3, or 3 if no proof could be delivered, and reveals raw on-chain balances. Only opt in if the consumer explicitly needs the raw balances.
 
 ## When to use trust profile vs. custom attest
 

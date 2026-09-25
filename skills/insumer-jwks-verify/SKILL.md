@@ -6,9 +6,8 @@ description: >
   /v1/trust, or /v1/trust/batch and needs to verify the signature without
   trusting the JSON body. Covers both the JWT path (jose / PyJWT / go-jose) and
   the raw sig path (ES256 over the canonical attestation/trust object).
-allowed-tools: Bash
 metadata:
-  version: "0.1.2"
+  version: "0.2.0"
   author: InsumerAPI
 ---
 
@@ -223,7 +222,7 @@ echo '{"jwt":"eyJhbG...","kid":"insumer-attest-v2"}' | python scripts/verify.py
 
 | Skill | Purpose |
 |---|---|
-| `insumer-auth` | Get a key (verifying responses doesn't need a key, but signing them does) |
+| `insumer-auth` | Get a key (verifying responses doesn't need a key, but requesting them does) |
 | `insumer-attest` | Produces signed responses to verify |
 | `insumer-trust` | Produces signed responses to verify |
 | `insumer-trust-batch` | Verify each profile entry independently |
