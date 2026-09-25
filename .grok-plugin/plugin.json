@@ -6,8 +6,8 @@
     "name": "InsumerAPI",
     "url": "https://insumermodel.com"
   },
-  "homepage": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
-  "repository": "https://github.com/douglasborthwick-crypto/insumer-agent-skills",
+  "homepage": "https://github.com/insumerapi/insumer-agent-skills",
+  "repository": "https://github.com/insumerapi/insumer-agent-skills",
   "license": "MIT",
   "keywords": [
     "insumer",

@@ -41,10 +41,10 @@ These skills follow the [Agent Skills](https://agentskills.io) open standard, so
 
 ```bash
 # Project-level (per repo)
-npx skills add douglasborthwick-crypto/insumer-agent-skills
+npx skills add insumerapi/insumer-agent-skills
 
 # Global (every project on your machine)
-npx skills add douglasborthwick-crypto/insumer-agent-skills --global
+npx skills add insumerapi/insumer-agent-skills --global
 ```
 
 ### Option B: Manual (Claude Code)
@@ -52,7 +52,7 @@ npx skills add douglasborthwick-crypto/insumer-agent-skills --global
 Each skill folder goes directly under `~/.claude/skills/` (one level deep; a nested `insumer/` group folder is not discovered):
 
 ```bash
-git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
+git clone https://github.com/insumerapi/insumer-agent-skills.git
 mkdir -p ~/.claude/skills
 cp -r insumer-agent-skills/skills/insumer-* ~/.claude/skills/
 ```
@@ -62,7 +62,7 @@ cp -r insumer-agent-skills/skills/insumer-* ~/.claude/skills/
 Grok Build reads the same `SKILL.md` format from `~/.grok/skills/` (every project) or `.grok/skills/` in a repo:
 
 ```bash
-git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
+git clone https://github.com/insumerapi/insumer-agent-skills.git
 mkdir -p ~/.grok/skills
 cp -r insumer-agent-skills/skills/insumer-* ~/.grok/skills/
 ```
