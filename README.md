@@ -29,7 +29,7 @@ OAuth proves who the user is. **Wallet auth proves what the wallet holds.** Insu
 | [insumer-attest](skills/insumer/insumer-attest/) | Custom condition attestation across 37 chains (`/v1/attest`) | 0.1.2 |
 | [insumer-trust](skills/insumer/insumer-trust/) | Curated wallet trust profile, 45 base checks across 26 chains (`/v1/trust`) | 0.1.2 |
 | [insumer-trust-batch](skills/insumer/insumer-trust-batch/) | Batch trust profiles for multiple wallets (`/v1/trust/batch`) | 0.1.2 |
-| [insumer-jwks-verify](skills/insumer/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.1.1 |
+| [insumer-jwks-verify](skills/insumer/insumer-jwks-verify/) | Offline ES256 verification of signed responses (raw `sig` or JWT) against the public JWKS | 0.1.2 |
 
 ---
 
@@ -49,9 +49,22 @@ npx skills add douglasborthwick-crypto/insumer-agent-skills --global
 
 ### Option B: Manual (Claude Code)
 
+Each skill folder goes directly under `~/.claude/skills/` (one level deep; a nested `insumer/` group folder is not discovered):
+
 ```bash
 git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
-cp -r insumer-agent-skills/skills/insumer ~/.claude/skills/
+mkdir -p ~/.claude/skills
+cp -r insumer-agent-skills/skills/insumer/insumer-* ~/.claude/skills/
+```
+
+### Option C: Manual (Grok Build)
+
+Grok Build reads the same `SKILL.md` format from `~/.grok/skills/` (every project) or `.grok/skills/` in a repo:
+
+```bash
+git clone https://github.com/douglasborthwick-crypto/insumer-agent-skills.git
+mkdir -p ~/.grok/skills
+cp -r insumer-agent-skills/skills/insumer/insumer-* ~/.grok/skills/
 ```
 
 Restart your agent. The skills activate automatically when you ask anything that mentions wallet auth, token gating, condition-based access, on-chain eligibility, signed booleans, or JWKS verification.
@@ -101,7 +114,7 @@ Each skill encodes these as hard constraints, with reference shapes verified aga
 
 ## Compatible agents
 
-These skills work in any [agentskills.io](https://agentskills.io)-compatible agent. The current adopter list includes Claude, Claude Code, Cursor, GitHub Copilot, VS Code, OpenAI Codex, Google Gemini CLI, JetBrains Junie, Sourcegraph Amp, Block Goose, OpenHands, OpenCode, Letta, Roo Code, Mistral Vibe, ByteDance Trae, Snowflake Cortex, Databricks Genie, Spring AI, Kiro, Workshop, Qodo, Factory, Firebender, and others — see [agentskills.io/home](https://agentskills.io/home) for the live list.
+These skills work in any [agentskills.io](https://agentskills.io)-compatible agent. The current adopter list includes Claude, Claude Code, Cursor, GitHub Copilot, VS Code, OpenAI Codex, Google Gemini CLI, JetBrains Junie, Sourcegraph Amp, Block Goose, OpenHands, OpenCode, Letta, Roo Code, Mistral Vibe, ByteDance Trae, Snowflake Cortex, Databricks Genie, Spring AI, Kiro, Workshop, Qodo, Factory, Firebender, and others — see [agentskills.io/home](https://agentskills.io/home) for the live list. xAI's Grok Build reads the same `SKILL.md` format (see Option C above).
 
 ---
 

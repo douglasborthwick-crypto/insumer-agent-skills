@@ -8,7 +8,7 @@ description: >
   the raw sig path (ES256 over the canonical attestation/trust object).
 allowed-tools: Bash
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
   author: InsumerAPI
 ---
 
@@ -128,8 +128,10 @@ async function verifyRawSig(data, jwks) {
 This checks the ES256 signature only. It does not check condition hashes, expiry, or the post-quantum companion. For all of those, use the official package, **`insumer-verify`** on npm (ES module; import it, do not `require` it):
 
 ```bash
-npm install insumer-verify
+npm install insumer-verify @noble/post-quantum
 ```
+
+`@noble/post-quantum` is an optional peer of `insumer-verify`. Without it, every response still verifies classically, but `checks.pq.status` reports `unverifiable` for a companion that is present, so the post-quantum signature is never actually checked.
 
 ```javascript
 import { verifyAttestation, verifyTrustProfile } from 'insumer-verify';
