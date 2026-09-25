@@ -146,7 +146,7 @@ curl -X POST https://api.insumermodel.com/v1/attest \
   }'
 ```
 
-`proof: "merkle"` returns EIP-1186 storage proofs alongside the boolean and **costs 2 credits instead of 1**. **Note**: Merkle mode reveals the raw on-chain balance to the caller — standard mode does not. Only opt in if the consumer needs the raw balance.
+`proof: "merkle"` returns EIP-1186 storage proofs alongside the boolean and **costs 2 credits instead of 1** (1 if no proof could be delivered). **Note**: Merkle mode reveals the raw on-chain balance to the caller — standard mode does not. Only opt in if the consumer needs the raw balance.
 
 ### Example 6: XRPL trust line
 
@@ -197,7 +197,7 @@ echo '{"wallet":"0x...","conditions":[{"type":"token_balance",...}]}' | python s
 |---|---|---|
 | `400` | Missing/invalid wallet, conditions, or condition fields | Check request body against `references/condition-shapes.md` |
 | `401` | Missing or invalid API key | See `insumer-auth` skill |
-| `402` | Out of verification credits | Top up via `POST /v1/credits/buy` |
+| `402` | Out of verification credits | Top up via Path 4 in `insumer-auth`, only after the user approves the payment |
 | `503` | Upstream blockchain data source unavailable | Retryable after a short delay; no credits charged |
 
 ## Related skills

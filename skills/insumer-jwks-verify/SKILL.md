@@ -32,7 +32,7 @@ InsumerAPI returns up to **two** verifiable forms in a signed response:
 1. **`sig` field** (every response): base64 P1363 ES256 signature over the preimage the `kid` selects (see "What's signed" in `references/jwks-format.md`). Attestations: for `insumer-attest-v2`, the domain tag `insumer.attestation.v2` + newline + canonical JSON (keys sorted recursively, no whitespace) of `{v:2, id, pass, results, attestedAt}`; for `insumer-attest-v1`, `JSON.stringify({id, pass, results, attestedAt})` in that insertion order. Trust profiles: for `insumer-trust-v2`, the domain tag `insumer.trust.v2` + newline + canonical JSON of the whole `trust` object; for `insumer-attest-v1`, `JSON.stringify(trust)` as issued. Verify with any ES256 library + the JWKS key the `kid` names. Every response also carries `pqSig`/`pqKid`, an ML-DSA-65 companion over the same preimage under a post-quantum domain tag (spec Check 6).
 2. **`jwt` field** *(`/v1/attest` only, and only when `"format": "jwt"` is in the request body; `/v1/trust` and `/v1/trust/batch` have no JWT form)* — standard ES256 JWT carrying the attestation as claims, with a sibling `pqJwt` companion. Verify with any standard JWT library pointed at the JWKS URL.
 
-The `jwt` path is easier when the consumer is already using a JWT library; the `sig` path is more compact and avoids JWT envelope overhead. Both produce the same security guarantees.
+The `jwt` path is easier when the consumer is already using a JWT library, and it signs the wallet as the `sub` claim. The raw `sig` path is more compact, but for most condition types it does not sign the wallet: it proves that some wallet met the condition, not which one. Use the JWT form (or an `erc8004_agent` / `erc7710_delegation` condition, which carry the wallet in the signed result) whenever the relying party must know which wallet was attested.
 
 ## Recipe 1: JWT verification (Node.js, `jose`)
 
@@ -194,7 +194,7 @@ For the raw form, the same loop runs over `data.attestation.results` with `data.
 
 ## Code emission rules
 
-1. **Cache the JWKS, not the verdict.** Libraries like `jose`'s `createRemoteJWKSet` and `PyJWT`'s `PyJWKClient` cache automatically with TTL. Do not cache `pass` — wallet state changes and the attestation has a 30-minute `expiresAt`.
+1. **Cache the JWKS, not the verdict.** Libraries like `jose`'s `createRemoteJWKSet` and `PyJWT`'s `PyJWKClient` cache automatically with TTL. Do not cache `pass` — wallet state changes and the attestation has an `expiresAt` 30 minutes out (5 with a delegation condition).
 2. **Pin the algorithm.** Always pass `algorithms: ['ES256']` — never accept any algorithm. This blocks "alg confusion" attacks.
 3. **Pin the issuer.** Always pass `issuer: 'https://api.insumermodel.com'` for JWT verification.
 4. **Verify in the trust boundary.** Verify on the server that's making the access decision — never verify in the browser and trust the result. (Browsers can verify; they just can't be the trust boundary.)
@@ -215,7 +215,7 @@ echo '{"jwt":"eyJhbG...","kid":"insumer-attest-v2"}' | python scripts/verify.py
 | "unknown kid" | Response signed with a key not in current JWKS | Refresh JWKS cache; if persistent, the key may be rotated — check JWKS URL directly |
 | "JWT signature invalid" | Payload tampered, or wrong public key | Confirm `kid` matches a JWKS entry, confirm algorithm pinned to ES256 |
 | "JWT issuer mismatch" | Issuer claim doesn't match `https://api.insumermodel.com` | Confirm response actually came from InsumerAPI |
-| "JWT expired" | Beyond 30-min TTL | Re-request a fresh attestation; do not extend TTL |
+| "JWT expired" | Past its `exp` (30 min, or 5 with a delegation condition) | Re-request a fresh attestation; do not extend TTL |
 | "conditionHash mismatch" | Condition object was modified after signing | Untrusted payload — reject |
 
 ## Related skills

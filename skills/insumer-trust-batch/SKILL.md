@@ -151,7 +151,7 @@ curl -X POST https://api.insumermodel.com/v1/trust/batch \
   }'
 ```
 
-Cost: `successful_wallets * 6` credits. Reveals raw on-chain balances — only opt in if needed.
+Cost: up to `successful_wallets * 6` credits; a wallet whose profile carried no proof costs 3. Reveals raw on-chain balances — only opt in if needed.
 
 ## When to use batch vs single
 

@@ -70,7 +70,7 @@ def main() -> int:
         print(f"INVALID: issuer mismatch — {e}", file=sys.stderr)
         return 1
     except jwt.ExpiredSignatureError:
-        print("INVALID: JWT has expired (30-min TTL exceeded).", file=sys.stderr)
+        print("INVALID: JWT has expired (past its exp: 30 min, or 5 for a delegation condition).", file=sys.stderr)
         return 1
     except jwt.InvalidSignatureError:
         print("INVALID: signature does not verify against the public JWKS.", file=sys.stderr)

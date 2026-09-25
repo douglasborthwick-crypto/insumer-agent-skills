@@ -67,7 +67,7 @@ mkdir -p ~/.grok/skills
 cp -r insumer-agent-skills/skills/insumer-* ~/.grok/skills/
 ```
 
-Restart your agent. The skills activate automatically when you ask anything that mentions wallet auth, token gating, condition-based access, on-chain eligibility, signed booleans, or JWKS verification.
+Restart your agent. The skills activate when you ask about InsumerAPI: getting a key, attesting a wallet condition, a wallet trust profile, or verifying an InsumerAPI signed response.
 
 ---
 
@@ -125,11 +125,11 @@ The skills are instructions plus small helper scripts. There are no hooks, no MC
 | Script | Calls | Sends |
 | ------ | ----- | ----- |
 | `insumer-auth/scripts/create_key.py` | `POST https://api.insumermodel.com/v1/keys/create` | `email` (yours), `appName`, `tier: "free"`; no key needed |
-| `insumer-auth/scripts/buy_key.py` | `POST https://api.insumermodel.com/v1/keys/buy` | `txHash` and `chainId` of a payment you already made, optional `amount`, `appName`, `keyDelivery: "apiKey"`; no key needed |
-| `insumer-auth/scripts/buy_credits.py` | `POST https://api.insumermodel.com/v1/credits/buy` | `INSUMER_API_KEY`, plus `txHash` and `chainId` of a payment you already made, `amount`, optional `updateWallet` |
+| `insumer-auth/scripts/buy_key.py` | `POST https://api.insumermodel.com/v1/keys/buy` | `txHash`, `chainId`, `appName` (default `"insumer-agent-skills"`), `keyDelivery: "apiKey"`, and `amount` unless paying in BTC; no key needed |
+| `insumer-auth/scripts/buy_credits.py` | `POST https://api.insumermodel.com/v1/credits/buy` | `INSUMER_API_KEY`, plus `txHash`, `chainId`, `amount` unless paying in BTC, optional `updateWallet` |
 | `insumer-attest/scripts/attest.py` | `POST https://api.insumermodel.com/v1/attest` | `INSUMER_API_KEY` and the request body you provide |
-| `insumer-trust/scripts/trust.py` | `POST https://api.insumermodel.com/v1/trust` | `INSUMER_API_KEY` and the wallet addresses you pass |
-| `insumer-trust-batch/scripts/trust_batch.py` | `POST https://api.insumermodel.com/v1/trust/batch` | `INSUMER_API_KEY` and the wallet addresses you pass |
+| `insumer-trust/scripts/trust.py` | `POST https://api.insumermodel.com/v1/trust` | `INSUMER_API_KEY`, the wallet addresses you pass, and optional `proof: "merkle"` |
+| `insumer-trust-batch/scripts/trust_batch.py` | `POST https://api.insumermodel.com/v1/trust/batch` | `INSUMER_API_KEY`, the wallet addresses you pass, and optional `proof: "merkle"` |
 | `insumer-jwks-verify/scripts/verify.py` | `GET https://insumermodel.com/.well-known/jwks.json` | Nothing; it fetches the public keys and verifies locally |
 
 The only credential is `INSUMER_API_KEY`, read from the environment and sent only to `api.insumermodel.com` in the `X-API-Key` header. No script signs or sends a transaction or holds a private key. None reads any other environment variable (beyond the standard proxy variables Python's HTTP client honors) or any file except a request or wallet list you pass on the command line (`--body-file`, `--wallets-file`) or on stdin.

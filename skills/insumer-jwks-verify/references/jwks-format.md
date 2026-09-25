@@ -72,7 +72,7 @@ For `/v1/attest` (raw form), the signed preimage is selected by `data.kid`:
 - `insumer-attest-v2`: `"insumer.attestation.v2" + "\n" + canonical_json({ v: 2, id, pass, results, attestedAt })`, keys sorted recursively.
 - `insumer-attest-v1`: the bare `JSON.stringify({ id, pass, results, attestedAt })` in that insertion order.
 - Signed through `results`: every `evaluatedCondition`, `conditionHash`, `met`, and each result's chain anchor (`blockNumber`/`blockTimestamp`, or `slot`, `ledgerIndex`, `blockHeight`, `checkpointSequence`).
-- NOT signed: `expiresAt` (bound to the signed `attestedAt` by spec Check 4) and the top-level `wallet` echo. In JWT form the wallet is the signed `sub` claim.
+- NOT signed: `expiresAt` (bound to the signed `attestedAt` by spec Check 4), `passCount`/`failCount`, and the wallet itself. For most condition types the raw form does not name the wallet at all. In JWT form the wallet is the signed `sub` claim.
 - Beside `sig`/`kid`, every response also carries `pqSig`/`pqKid` (ML-DSA-65 over the post-quantum domain tag plus the same classical preimage); in JWT form a sibling `pqJwt`.
 
 For `/v1/trust` and `/v1/trust/batch`, selected by `kid`:
@@ -136,7 +136,7 @@ Verifiers should:
 |---|---|---|
 | `unknown kid` after rotation | Stale JWKS cache | Force refresh; if persistent, kid was retired |
 | `JWT signature invalid` | Payload tampered or wrong key | Reject; do not retry with different keys |
-| `JWT expired` (`exp` in past) | Beyond 30-min TTL | Re-request a fresh attestation |
+| `JWT expired` (`exp` in past) | Past its `exp` (30 min, or 5 with a delegation condition) | Re-request a fresh attestation |
 | `JWT issuer mismatch` | Response not from InsumerAPI | Reject |
 | `algorithm not allowed` | Verifier didn't pin ES256 | Always pass `algorithms: ['ES256']` |
 
